@@ -11,13 +11,14 @@
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
   <style>
     :root {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      color-scheme: dark;
-      color: rgba(255, 255, 255, 0.87);
-      background-color: #0f172a;
+      color-scheme: light;
+      color: #1e293b;
+      background-color: #f1f5f9;
     }
     body {
       margin: 0;
@@ -29,11 +30,11 @@
 
     /* Glassmorphism */
     .glass {
-      background: rgba(30, 41, 59, 0.7);
+      background: rgba(255, 255, 255, 0.9);
       backdrop-filter: blur(10px);
       -webkit-backdrop-filter: blur(10px);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+      border: 1px solid rgba(226, 232, 240, 1);
+      box-shadow: 0 4px 15px 0 rgba(0, 0, 0, 0.05);
       border-radius: 12px;
     }
 
@@ -47,7 +48,7 @@
     #uploader {
       padding: 4rem 2rem;
       text-align: center;
-      border: 2px dashed rgba(255,255,255,0.2);
+      border: 2px dashed #cbd5e1;
       border-radius: 12px;
       cursor: pointer;
       position: relative;
@@ -84,7 +85,7 @@
     .grid-2 { display: grid; grid-template-columns: 1.5fr 1fr; gap: 1.5rem; }
 
     .card { padding: 1.5rem; border-left: 4px solid #38bdf8; }
-    .card h4 { margin: 0 0 0.5rem 0; color: #94a3b8; font-size: 0.9rem; }
+    .card h4 { margin: 0 0 0.5rem 0; color: #64748b; font-size: 0.9rem; }
     .card h2 { margin: 0; font-size: 2rem; font-weight: bold; }
 
     .chart-container { position: relative; height: 350px; width: 100%; }
@@ -93,8 +94,8 @@
 
     /* Tables */
     table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.85rem; }
-    th, td { padding: 0.75rem 0.5rem; border-bottom: 1px solid rgba(51, 65, 85, 0.5); }
-    th { color: #94a3b8; border-bottom-color: #334155; position: sticky; top: 0; background-color: rgba(30, 41, 59, 0.95); z-index: 10; white-space: nowrap; }
+    th, td { padding: 0.75rem 0.5rem; border-bottom: 1px solid #e2e8f0; }
+    th { color: #475569; border-bottom-color: #cbd5e1; position: sticky; top: 0; background-color: rgba(248, 250, 252, 0.95); z-index: 10; white-space: nowrap; }
     td { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px; }
     
     .filters {
@@ -105,37 +106,37 @@
       flex-wrap: wrap;
     }
     .filter-group { display: flex; gap: 0.5rem; align-items: center; }
-    select, input[type="date"] {
-      padding: 0.5rem; border-radius: 6px; background: #334155;
-      color: #fff; border: 1px solid #475569; outline: none;
+    select, input[type="date"], input[type="text"], input[type="password"] {
+      padding: 0.5rem; border-radius: 6px; background: #ffffff;
+      color: #1e293b; border: 1px solid #cbd5e1; outline: none;
     }
-    input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); }
+    input[type="date"]::-webkit-calendar-picker-indicator { filter: none; }
 
     /* Modals */
     .modal-overlay {
       position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-      background: rgba(15, 23, 42, 0.8);
+      background: rgba(15, 23, 42, 0.4);
       backdrop-filter: blur(5px);
       display: none; justify-content: center; align-items: center;
       z-index: 1000;
     }
     .modal-content {
-      background: #1e293b; border: 1px solid #475569; border-radius: 12px;
+      background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px;
       width: 90%; max-width: 800px; max-height: 85vh;
       display: flex; flex-direction: column;
-      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
     }
     .modal-header {
-      padding: 1.5rem; border-bottom: 1px solid #334155;
+      padding: 1.5rem; border-bottom: 1px solid #e2e8f0;
       display: flex; justify-content: space-between; align-items: center;
     }
     .modal-body {
       padding: 1.5rem; overflow-y: auto; flex: 1;
     }
     .close-btn {
-      background: none; border: none; color: #94a3b8; font-size: 1.5rem; cursor: pointer;
+      background: none; border: none; color: #64748b; font-size: 1.5rem; cursor: pointer;
     }
-    .close-btn:hover { color: #fff; }
+    .close-btn:hover { color: #0f172a; }
 
     /* Utilities */
     .color-emerald { border-left-color: #10b981 !important; }
@@ -160,8 +161,8 @@
       flex: 1; min-width: 200px;
       padding: 0.5rem 0.75rem;
       border-radius: 6px;
-      background: #0f172a;
-      color: #fff;
+      background: #ffffff;
+      color: #1e293b;
       border: 1px solid rgba(16, 185, 129, 0.3);
       outline: none;
       font-size: 0.85rem;
@@ -193,26 +194,26 @@
     /* Customer chart popup tooltip */
     .customer-tooltip {
       position: fixed;
-      background: #1e293b;
-      border: 1px solid #475569;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
       border-radius: 10px;
       padding: 1rem 1.25rem;
-      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
       z-index: 2000;
       pointer-events: none;
       min-width: 220px;
       transition: opacity 0.15s;
     }
-    .tooltip-rank { font-size: 0.75rem; color: #94a3b8; margin-bottom: 0.25rem; }
-    .tooltip-name { font-size: 1rem; font-weight: bold; color: #fff; margin-bottom: 0.5rem; word-break: break-word; }
+    .tooltip-rank { font-size: 0.75rem; color: #64748b; margin-bottom: 0.25rem; }
+    .tooltip-name { font-size: 1rem; font-weight: bold; color: #1e293b; margin-bottom: 0.5rem; word-break: break-word; }
     .tooltip-value { font-size: 1.4rem; font-weight: bold; color: #8b5cf6; }
     .tooltip-pct { font-size: 0.85rem; color: #94a3b8; margin-top: 0.2rem; }
     .tooltip-items { font-size: 0.8rem; color: #f59e0b; margin-top: 0.2rem; }
 
     /* Chart Toggles */
-    .chart-toggle-btn { background: #334155; border: 1px solid #475569; color: #94a3b8; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.75rem; cursor: pointer; transition: all 0.2s; }
-    .chart-toggle-btn.active { background: rgba(56, 189, 248, 0.2); color: #38bdf8; border-color: #38bdf8; }
-    .chart-toggle-btn:hover { background: #475569; color: #fff; }
+    .chart-toggle-btn { background: #f1f5f9; border: 1px solid #cbd5e1; color: #64748b; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.75rem; cursor: pointer; transition: all 0.2s; }
+    .chart-toggle-btn.active { background: rgba(56, 189, 248, 0.1); color: #0284c7; border-color: #38bdf8; }
+    .chart-toggle-btn:hover { background: #e2e8f0; color: #1e293b; }
 
     /* Breakdown Badges */
     .card-breakdown { margin-top: 0.75rem; display: flex; gap: 0.5rem; font-size: 0.8rem; flex-wrap: wrap; }
@@ -227,19 +228,50 @@
     .bg-blue { background: rgba(56, 189, 248, 0.2); color: #38bdf8; }
 
     ::-webkit-scrollbar { width: 8px; height: 8px; }
-    ::-webkit-scrollbar-track { background: #0f172a; }
-    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
-    ::-webkit-scrollbar-thumb:hover { background: #475569; }
+    ::-webkit-scrollbar-track { background: #f1f5f9; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    
+    /* PDF Button */
+    .pdf-btn {
+      background: rgba(239, 68, 68, 0.1);
+      color: #ef4444;
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      cursor: pointer;
+      font-weight: bold;
+      transition: all 0.2s;
+    }
+    .pdf-btn:hover {
+      background: #ef4444;
+      color: #fff;
+    }
   </style>
 </head>
 <body>
 
   <header>
     <h1 class="text-gradient" style="margin: 0; font-size: 2rem;">Returned Medicines Dashboard</h1>
-    <button id="clearBtn" style="display: none; padding: 0.5rem 1rem; background-color: #ef4444; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">
-      ล้างข้อมูล (Clear Data)
-    </button>
+    <div style="display: flex; gap: 0.75rem; align-items: center;">
+      <a href="Executive_View.html" target="_blank"
+         style="display: inline-flex; align-items: center; gap: 0.5rem;
+                padding: 0.55rem 1.2rem;
+                background: linear-gradient(135deg, #1e3a5f, #2563eb);
+                color: #fff; border: none; border-radius: 8px;
+                font-weight: bold; font-size: 0.9rem; cursor: pointer;
+                text-decoration: none;
+                box-shadow: 0 4px 12px rgba(37,99,235,0.3);
+                transition: opacity 0.2s;">
+        📋 Executive View
+      </a>
+      <button id="clearBtn" style="display: none; padding: 0.5rem 1rem; background-color: #ef4444; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">
+        ล้างข้อมูล (Clear Data)
+      </button>
+    </div>
   </header>
+
 
   <!-- Uploader View -->
   <div id="uploader" class="glass">
@@ -319,7 +351,7 @@
     </div>
 
     <!-- Charts Row: Monthly Trend -->
-    <div class="glass" style="padding: 1.5rem; margin-bottom: 1.5rem;">
+    <div class="glass" style="padding: 1.5rem; margin-bottom: 1.5rem;" id="monthlyChartWrapper">
       <h3 style="margin: 0 0 1rem 0;">มูลค่าการคืนยารวมรายเดือน (เปรียบเทียบบริษัท)</h3>
       <div class="chart-container"><canvas id="monthlyChart"></canvas></div>
     </div>
@@ -331,7 +363,7 @@
         <div style="display: flex; justify-content: space-between; align-items: flex-start;">
           <div>
             <h3 style="margin: 0 0 0.5rem 0;">🏆 10 อันดับลูกค้าที่คืนยามูลค่าสูงสุด</h3>
-            <p style="margin: 0 0 0.5rem 0; font-size: 0.8rem; color: #94a3b8;">คลิกที่แถบเพื่อดูรายละเอียด</p>
+            <p style="margin: 0 0 0.5rem 0; font-size: 0.8rem; color: #64748b;">คลิกที่แถบเพื่อดูรายละเอียด</p>
           </div>
           <span style="color: #8b5cf6; font-size: 0.8rem; background: rgba(139,92,246,0.1); padding: 0.2rem 0.5rem; border-radius: 4px;">คลิกดูทั้งหมด</span>
         </div>
@@ -345,7 +377,7 @@
         <div style="display: flex; justify-content: space-between; align-items: flex-start;">
           <div>
             <h3 style="margin: 0 0 0.5rem 0;">💼 10 อันดับผู้แทนที่มียาคืนมูลค่าสูงสุด</h3>
-            <p style="margin: 0 0 0.5rem 0; font-size: 0.8rem; color: #94a3b8;">คลิกที่แถบเพื่อดูรายละเอียด</p>
+            <p style="margin: 0 0 0.5rem 0; font-size: 0.8rem; color: #64748b;">คลิกที่แถบเพื่อดูรายละเอียด</p>
           </div>
           <span style="color: #f43f5e; font-size: 0.8rem; background: rgba(244,63,94,0.1); padding: 0.2rem 0.5rem; border-radius: 4px;">คลิกดูทั้งหมด</span>
         </div>
@@ -357,7 +389,7 @@
 
     <!-- Charts Row 1: Products and Process Status -->
     <div class="grid-2">
-      <div class="glass clickable-chart" style="padding: 1.5rem;" onclick="openModal('productModal')">
+      <div class="glass clickable-chart" style="padding: 1.5rem;" id="productChartWrapper" onclick="openModal('productModal')">
         <div style="display: flex; justify-content: space-between; align-items: flex-start;">
           <div>
             <h3 style="margin: 0 0 0.5rem 0;">10 อันดับยาที่มีการคืนสูงสุด (ตามมูลค่า)</h3>
@@ -366,17 +398,21 @@
               <button class="chart-toggle-btn" onclick="setChartFilter('barChart', 'Prosp', this)">Prosp</button>
             </div>
           </div>
-          <span style="color: #38bdf8; font-size: 0.8rem; background: rgba(56, 189, 248, 0.1); padding: 0.2rem 0.5rem; border-radius: 4px;">คลิกดูทั้งหมด</span>
+          <div style="display: flex; gap: 0.5rem; align-items: center;">
+            <span style="color: #38bdf8; font-size: 0.8rem; background: rgba(56, 189, 248, 0.1); padding: 0.2rem 0.5rem; border-radius: 4px;">คลิกดูทั้งหมด</span>
+          </div>
         </div>
         <div class="chart-container"><canvas id="barChart"></canvas></div>
       </div>
-      <div class="glass clickable-chart" style="padding: 1.5rem;" onclick="openModal('qaWhModal')">
+      <div class="glass clickable-chart" style="padding: 1.5rem;" id="qaWhChartWrapper" onclick="openModal('qaWhModal')">
         <div style="display: flex; justify-content: space-between; align-items: flex-start;">
           <div>
             <h3 style="margin: 0 0 0.5rem 0;">การจัดการโดยคลัง (QA/WH) (%)</h3>
-            <p style="margin: 0 0 1rem 0; font-size: 0.8rem; color: #94a3b8;">ข้อมูลสถานะสินค้าคืนจากคลัง</p>
+            <p style="margin: 0 0 1rem 0; font-size: 0.8rem; color: #64748b;">ข้อมูลสถานะสินค้าคืนจากคลัง</p>
           </div>
-          <span style="color: #38bdf8; font-size: 0.8rem; background: rgba(56, 189, 248, 0.1); padding: 0.2rem 0.5rem; border-radius: 4px;">คลิกดูทั้งหมด</span>
+          <div style="display: flex; gap: 0.5rem; align-items: center;">
+            <span style="color: #38bdf8; font-size: 0.8rem; background: rgba(56, 189, 248, 0.1); padding: 0.2rem 0.5rem; border-radius: 4px;">คลิกดูทั้งหมด</span>
+          </div>
         </div>
         <div class="chart-container"><canvas id="qaWhChart"></canvas></div>
       </div>
@@ -384,7 +420,7 @@
 
     <!-- Charts Row 2: Reasons and QA Result -->
     <div class="grid-2">
-      <div class="glass clickable-chart" style="padding: 1.5rem;" onclick="openModal('reasonModal')">
+      <div class="glass clickable-chart" style="padding: 1.5rem;" id="reasonChartWrapper" onclick="openModal('reasonModal')">
         <div style="display: flex; justify-content: space-between; align-items: flex-start;">
           <div>
             <h3 style="margin: 0 0 0.5rem 0;">5 อันดับสาเหตุการคืนยา (%)</h3>
@@ -393,17 +429,21 @@
               <button class="chart-toggle-btn" onclick="setChartFilter('reasonChart', 'Prosp', this)">Prosp</button>
             </div>
           </div>
-          <span style="color: #38bdf8; font-size: 0.8rem; background: rgba(56, 189, 248, 0.1); padding: 0.2rem 0.5rem; border-radius: 4px;">คลิกดูสาเหตุทั้งหมด</span>
+          <div style="display: flex; gap: 0.5rem; align-items: center;">
+            <span style="color: #38bdf8; font-size: 0.8rem; background: rgba(56, 189, 248, 0.1); padding: 0.2rem 0.5rem; border-radius: 4px;">คลิกดูสาเหตุทั้งหมด</span>
+          </div>
         </div>
         <div class="chart-container"><canvas id="reasonChart"></canvas></div>
       </div>
-      <div class="glass clickable-chart" style="padding: 1.5rem;" onclick="openModal('qaResultModal')">
+      <div class="glass clickable-chart" style="padding: 1.5rem;" id="qaResultChartWrapper" onclick="openModal('qaResultModal')">
         <div style="display: flex; justify-content: space-between; align-items: flex-start;">
           <div>
             <h3 style="margin: 0 0 0.5rem 0;">ผลประเมินจาก QA (%)</h3>
-            <p style="margin: 0 0 1rem 0; font-size: 0.8rem; color: #94a3b8;">สรุปผลประเมินขั้นสุดท้าย</p>
+            <p style="margin: 0 0 1rem 0; font-size: 0.8rem; color: #64748b;">สรุปผลประเมินขั้นสุดท้าย</p>
           </div>
-          <span style="color: #38bdf8; font-size: 0.8rem; background: rgba(56, 189, 248, 0.1); padding: 0.2rem 0.5rem; border-radius: 4px;">คลิกดูทั้งหมด</span>
+          <div style="display: flex; gap: 0.5rem; align-items: center;">
+            <span style="color: #38bdf8; font-size: 0.8rem; background: rgba(56, 189, 248, 0.1); padding: 0.2rem 0.5rem; border-radius: 4px;">คลิกดูทั้งหมด</span>
+          </div>
         </div>
         <div class="chart-container"><canvas id="qaResultChart"></canvas></div>
       </div>
@@ -428,12 +468,13 @@
     </div>
 
     <!-- Full Data Table at the bottom -->
-    <div class="glass" style="padding: 1.5rem; display: flex; flex-direction: column;">
+    <div class="glass" style="padding: 1.5rem; display: flex; flex-direction: column;" id="dataTableWrapper">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 1rem;">
         <h3 style="margin: 0;">ข้อมูลรายละเอียดรายการทั้งหมด (สอบกลับ)</h3>
         <div style="display: flex; align-items: center; gap: 0.5rem;">
-          <label style="color: #94a3b8; font-weight: bold;">🔍 กรองเฉพาะผู้แทน:</label>
-          <input type="text" id="tableSalesRepSearch" placeholder="ระบุชื่อผู้แทน..." style="width: 200px; padding: 0.5rem; border-radius: 6px; background: #334155; color: #fff; border: 1px solid #475569; outline: none;">
+          <button class="pdf-btn" onclick="downloadPDF('dataTableWrapper', 'Data_Table')">💾 PDF</button>
+          <label style="color: #64748b; font-weight: bold; margin-left: 1rem;">🔍 กรองเฉพาะผู้แทน:</label>
+          <input type="text" id="tableSalesRepSearch" placeholder="ระบุชื่อผู้แทน..." style="width: 200px; padding: 0.5rem; border-radius: 6px; background: #ffffff; color: #1e293b; border: 1px solid #cbd5e1; outline: none;">
         </div>
       </div>
       <div style="overflow-x: auto; flex: 1; max-height: 500px;">
@@ -634,9 +675,24 @@
 
     // --- Chart Global Defaults ---
     Chart.register(ChartDataLabels);
-    Chart.defaults.color = '#94a3b8';
+    Chart.defaults.color = '#475569';
     Chart.defaults.font.family = "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif";
     const bgColors = ['#38bdf8', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16', '#14b8a6', '#f43f5e'];
+
+    // --- PDF Download Function ---
+    function downloadPDF(elementId, filename) {
+      if(event) event.stopPropagation();
+      const element = document.getElementById(elementId);
+      if(!element) return;
+      const opt = {
+        margin:       0.5,
+        filename:     filename + '.pdf',
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
+        jsPDF:        { unit: 'in', format: 'letter', orientation: 'landscape' }
+      };
+      html2pdf().set(opt).from(element).save();
+    }
 
     // --- UI Elements ---
     const uploader = document.getElementById('uploader');
@@ -696,6 +752,7 @@
       el.addEventListener('change', renderDashboard);
     });
     tableSalesRepSearch.addEventListener('input', renderDashboard);
+    searchInput.addEventListener('input', renderDashboard);
 
     clearDateBtn.addEventListener('click', () => {
       startDate.value = '';
@@ -1263,8 +1320,8 @@
             }
           },
           scales: {
-            x: { grid: { color: '#334155' }, ticks: { font: { size: 10 } } },
-            y: { grid: { display: false }, ticks: { font: { size: 11 }, color: '#cbd5e1' } }
+            x: { grid: { display: false }, ticks: { font: { size: 11 }, color: '#475569' } },
+            y: { grid: { color: '#e2e8f0' }, ticks: { font: { size: 11 }, color: '#475569' } }
           }
         }
       });
@@ -1384,8 +1441,8 @@
           }
         },
         scales: {
-          x: { grid: { color: '#334155' }, ticks: { font: { size: 10 } } },
-          y: { grid: { display: false }, ticks: { font: { size: 11 }, color: '#cbd5e1' } }
+          x: { grid: { display: false }, ticks: { color: '#475569', font: { size: 10 } } },
+          y: { grid: { color: '#e2e8f0' }, beginAtZero: true, ticks: { font: { size: 10 }, color: '#475569' } }
         }
       }
     });
@@ -1453,8 +1510,8 @@
             }
           },
           scales: {
-            x: { grid: { display: axis === 'y', color: '#334155' }, ticks: { maxRotation: flatX ? 0 : 45, minRotation: flatX ? 0 : 45, font: { size: 11 } } },
-            y: { grid: { display: axis === 'x', color: '#334155' }, ticks: { font: { size: 11 } } }
+            x: { grid: { display: axis === 'y', color: '#e2e8f0' }, ticks: { color: '#475569', maxRotation: flatX ? 0 : 45, minRotation: flatX ? 0 : 45, font: { size: 11 } } },
+            y: { grid: { display: axis === 'x', color: '#e2e8f0' }, ticks: { color: '#475569', font: { size: 11 } } }
           }
         }
       });
@@ -1485,8 +1542,8 @@
             }
           },
           scales: {
-            x: { grid: { display: axis === 'y', color: '#334155' }, ticks: { maxRotation: 45, minRotation: 45, font: { size: 10 } } },
-            y: { grid: { display: axis === 'x', color: '#334155' }, ticks: { font: { size: 10 } } }
+            x: { grid: { display: axis === 'y', color: '#e2e8f0' }, ticks: { color: '#475569', maxRotation: 45, minRotation: 45, font: { size: 10 } } },
+            y: { grid: { display: axis === 'x', color: '#e2e8f0' }, ticks: { color: '#475569', font: { size: 10 } } }
           }
         }
       });
@@ -1517,8 +1574,8 @@
             }
           },
           scales: {
-            x: { grid: { display: axis === 'y', color: '#334155' }, ticks: { font: { size: 10 }, maxRotation: 45, minRotation: 45 } },
-            y: { grid: { display: axis === 'x', color: '#334155' }, ticks: { font: { size: 10 } } }
+            x: { grid: { display: axis === 'y', color: '#e2e8f0' }, ticks: { color: '#475569', font: { size: 10 }, maxRotation: 45, minRotation: 45 } },
+            y: { grid: { display: axis === 'x', color: '#e2e8f0' }, ticks: { color: '#475569', font: { size: 10 } } }
           }
         }
       });
