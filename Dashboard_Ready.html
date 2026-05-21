@@ -1,0 +1,1485 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Returned Medicines Dashboard</title>
+  
+  <!-- Load Libraries -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    :root {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      color-scheme: dark;
+      color: rgba(255, 255, 255, 0.87);
+      background-color: #0f172a;
+    }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      padding: 2rem;
+      box-sizing: border-box;
+    }
+    * { box-sizing: border-box; }
+
+    /* Glassmorphism */
+    .glass {
+      background: rgba(30, 41, 59, 0.7);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+      border-radius: 12px;
+    }
+
+    .text-gradient {
+      background: linear-gradient(90deg, #38bdf8, #818cf8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    /* Uploader */
+    #uploader {
+      padding: 4rem 2rem;
+      text-align: center;
+      border: 2px dashed rgba(255,255,255,0.2);
+      border-radius: 12px;
+      cursor: pointer;
+      position: relative;
+      transition: all 0.3s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    #uploader.dragging {
+      border-color: #38bdf8;
+      background-color: rgba(56, 189, 248, 0.1);
+    }
+    #fileInput {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      opacity: 0; cursor: pointer;
+    }
+
+    /* Layout */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+    }
+    #dashboard {
+      display: none;
+      flex-direction: column;
+      gap: 2rem;
+    }
+
+    .grid-4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5rem; }
+    .grid-2 { display: grid; grid-template-columns: 1.5fr 1fr; gap: 1.5rem; }
+
+    .card { padding: 1.5rem; border-left: 4px solid #38bdf8; }
+    .card h4 { margin: 0 0 0.5rem 0; color: #94a3b8; font-size: 0.9rem; }
+    .card h2 { margin: 0; font-size: 2rem; font-weight: bold; }
+
+    .chart-container { position: relative; height: 350px; width: 100%; }
+    .clickable-chart { cursor: pointer; transition: transform 0.2s; }
+    .clickable-chart:hover { transform: scale(1.01); border-color: #38bdf8; }
+
+    /* Tables */
+    table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.85rem; }
+    th, td { padding: 0.75rem 0.5rem; border-bottom: 1px solid rgba(51, 65, 85, 0.5); }
+    th { color: #94a3b8; border-bottom-color: #334155; position: sticky; top: 0; background-color: rgba(30, 41, 59, 0.95); z-index: 10; white-space: nowrap; }
+    td { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px; }
+    
+    .filters {
+      display: flex;
+      gap: 2rem;
+      align-items: center;
+      padding: 1rem 2rem;
+      flex-wrap: wrap;
+    }
+    .filter-group { display: flex; gap: 0.5rem; align-items: center; }
+    select, input[type="date"] {
+      padding: 0.5rem; border-radius: 6px; background: #334155;
+      color: #fff; border: 1px solid #475569; outline: none;
+    }
+    input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); }
+
+    /* Modals */
+    .modal-overlay {
+      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+      background: rgba(15, 23, 42, 0.8);
+      backdrop-filter: blur(5px);
+      display: none; justify-content: center; align-items: center;
+      z-index: 1000;
+    }
+    .modal-content {
+      background: #1e293b; border: 1px solid #475569; border-radius: 12px;
+      width: 90%; max-width: 800px; max-height: 85vh;
+      display: flex; flex-direction: column;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    }
+    .modal-header {
+      padding: 1.5rem; border-bottom: 1px solid #334155;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .modal-body {
+      padding: 1.5rem; overflow-y: auto; flex: 1;
+    }
+    .close-btn {
+      background: none; border: none; color: #94a3b8; font-size: 1.5rem; cursor: pointer;
+    }
+    .close-btn:hover { color: #fff; }
+
+    /* Utilities */
+    .color-emerald { border-left-color: #10b981 !important; }
+    .color-amber { border-left-color: #f59e0b !important; }
+    .color-rose { border-left-color: #ef4444 !important; }
+    .color-purple { border-left-color: #8b5cf6 !important; }
+    
+    .text-rose { color: #ef4444; }
+
+    /* Supabase Panel */
+    .supabase-panel {
+      background: rgba(16, 185, 129, 0.05);
+      border: 1px solid rgba(16, 185, 129, 0.2);
+      border-radius: 10px;
+      padding: 1rem 1.5rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      align-items: center;
+    }
+    .supabase-input {
+      flex: 1; min-width: 200px;
+      padding: 0.5rem 0.75rem;
+      border-radius: 6px;
+      background: #0f172a;
+      color: #fff;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      outline: none;
+      font-size: 0.85rem;
+    }
+    .supabase-input:focus { border-color: #10b981; }
+    .supabase-btn {
+      padding: 0.5rem 1.2rem;
+      border-radius: 6px;
+      border: none;
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: #fff;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: opacity 0.2s;
+    }
+    .supabase-btn:hover { opacity: 0.85; }
+    .supabase-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .supabase-status {
+      font-size: 0.8rem;
+      padding: 0.3rem 0.75rem;
+      border-radius: 20px;
+      font-weight: bold;
+    }
+    .status-connected { background: rgba(16,185,129,0.15); color: #10b981; }
+    .status-error { background: rgba(239,68,68,0.15); color: #ef4444; }
+    .status-idle { background: rgba(148,163,184,0.15); color: #94a3b8; }
+
+    /* Customer chart popup tooltip */
+    .customer-tooltip {
+      position: fixed;
+      background: #1e293b;
+      border: 1px solid #475569;
+      border-radius: 10px;
+      padding: 1rem 1.25rem;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+      z-index: 2000;
+      pointer-events: none;
+      min-width: 220px;
+      transition: opacity 0.15s;
+    }
+    .tooltip-rank { font-size: 0.75rem; color: #94a3b8; margin-bottom: 0.25rem; }
+    .tooltip-name { font-size: 1rem; font-weight: bold; color: #fff; margin-bottom: 0.5rem; word-break: break-word; }
+    .tooltip-value { font-size: 1.4rem; font-weight: bold; color: #8b5cf6; }
+    .tooltip-pct { font-size: 0.85rem; color: #94a3b8; margin-top: 0.2rem; }
+    .tooltip-items { font-size: 0.8rem; color: #f59e0b; margin-top: 0.2rem; }
+
+    /* Chart Toggles */
+    .chart-toggle-btn { background: #334155; border: 1px solid #475569; color: #94a3b8; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.75rem; cursor: pointer; transition: all 0.2s; }
+    .chart-toggle-btn.active { background: rgba(56, 189, 248, 0.2); color: #38bdf8; border-color: #38bdf8; }
+    .chart-toggle-btn:hover { background: #475569; color: #fff; }
+
+    /* Breakdown Badges */
+    .card-breakdown { margin-top: 0.75rem; display: flex; gap: 0.5rem; font-size: 0.8rem; flex-wrap: wrap; }
+    .badge-neoca { background: rgba(56, 189, 248, 0.15); color: #38bdf8; padding: 0.2rem 0.5rem; border-radius: 4px; border: 1px solid rgba(56, 189, 248, 0.3); }
+    .badge-prosp { background: rgba(16, 185, 129, 0.15); color: #10b981; padding: 0.2rem 0.5rem; border-radius: 4px; border: 1px solid rgba(16, 185, 129, 0.3); }
+
+    /* Status Badges */
+    .badge { padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.8rem; font-weight: bold; }
+    .bg-green { background: rgba(16, 185, 129, 0.2); color: #10b981; }
+    .bg-red { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
+    .bg-yellow { background: rgba(245, 158, 11, 0.2); color: #f59e0b; }
+    .bg-blue { background: rgba(56, 189, 248, 0.2); color: #38bdf8; }
+
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: #0f172a; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #475569; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1 class="text-gradient" style="margin: 0; font-size: 2rem;">Returned Medicines Dashboard</h1>
+    <button id="clearBtn" style="display: none; padding: 0.5rem 1rem; background-color: #ef4444; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">
+      ล้างข้อมูล (Clear Data)
+    </button>
+  </header>
+
+  <!-- Uploader View -->
+  <div id="uploader" class="glass">
+    <input type="file" id="fileInput" multiple accept=".csv">
+    <div style="font-size: 48px; margin-bottom: 1rem;">📂</div>
+    <h3 style="margin: 0; font-size: 1.5rem;">ลากไฟล์ CSV มาวางที่นี่</h3>
+    <p style="color: #94a3b8; margin-top: 0.5rem;">หรือคลิกเพื่อเลือกไฟล์รายงานยาคืน</p>
+    <p id="errorMsg" class="text-rose" style="margin-top: 1rem; display: none;"></p>
+  </div>
+
+  <!-- Dashboard View -->
+  <div id="dashboard">
+    <!-- Top actions -->
+    <div class="glass" style="padding: 1rem; text-align: center; position: relative;">
+      <input type="file" id="fileInputMore" multiple accept=".csv" style="position: absolute; top:0; left:0; width:100%; height:100%; opacity:0; cursor:pointer;">
+      <span style="font-weight: bold; color: #38bdf8;">+ อัปโหลดไฟล์ CSV เพิ่มเติม</span>
+    </div>
+
+    <!-- Filters -->
+    <div class="glass filters">
+      <div class="filter-group">
+        <label>บริษัท:</label>
+        <select id="filterCompany"><option value="All">ทุกบริษัท</option></select>
+      </div>
+      <div class="filter-group">
+        <label>เดือน:</label>
+        <select id="filterMonth"><option value="All">ทุกเดือน</option></select>
+      </div>
+      <div class="filter-group">
+        <label>ช่วงวันที่:</label>
+        <input type="date" id="startDate">
+        <span>ถึง</span>
+        <input type="date" id="endDate">
+        <button id="clearDateBtn" style="padding:0.5rem 1rem; border-radius:6px; background:#475569; color:#fff; border:none; cursor:pointer;">ล้างวันที่</button>
+      </div>
+      <div class="filter-group">
+        <label>ค้นหา:</label>
+        <input type="text" id="searchInput" placeholder="ค้นหาบิล, ชื่อลูกค้า, ยา, Lot, สาเหตุ..." style="width: 280px; padding: 0.5rem; border-radius: 6px; background: #334155; color: #fff; border: 1px solid #475569; outline: none;">
+      </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="grid-4">
+      <div class="glass card">
+        <h4>มูลค่าการคืนรวม</h4>
+        <h2 id="sumValue">฿0</h2>
+        <div class="card-breakdown">
+          <span class="badge-neoca" id="valNeoca">Neoca: ฿0</span>
+          <span class="badge-prosp" id="valProsp">Prosp: ฿0</span>
+        </div>
+      </div>
+      <div class="glass card color-amber">
+        <h4>จำนวนรายการบิล (Bill No.)</h4>
+        <h2 id="sumRows">0 รายการ</h2>
+        <div class="card-breakdown">
+          <span class="badge-neoca" id="billNeoca">Neoca: 0</span>
+          <span class="badge-prosp" id="billProsp">Prosp: 0</span>
+        </div>
+      </div>
+      <div class="glass card color-emerald">
+        <h4>จำนวน Lot ที่คืน</h4>
+        <h2 id="sumLots">0 Lot</h2>
+        <div class="card-breakdown">
+          <span class="badge-neoca" id="lotNeoca">Neoca: 0</span>
+          <span class="badge-prosp" id="lotProsp">Prosp: 0</span>
+        </div>
+      </div>
+      <div class="glass card color-rose">
+        <h4>สาเหตุหลักที่คืน</h4>
+        <h2 id="sumReason" style="font-size: 1.2rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">-</h2>
+        <div class="card-breakdown">
+          <span class="badge-neoca" id="reasonNeoca">Neoca: 0</span>
+          <span class="badge-prosp" id="reasonProsp">Prosp: 0</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Charts Row: Monthly Trend -->
+    <div class="glass" style="padding: 1.5rem; margin-bottom: 1.5rem;">
+      <h3 style="margin: 0 0 1rem 0;">มูลค่าการคืนยารวมรายเดือน (เปรียบเทียบบริษัท)</h3>
+      <div class="chart-container"><canvas id="monthlyChart"></canvas></div>
+    </div>
+
+    <!-- Customer Top 10 Chart -->
+    <div class="glass clickable-chart" style="padding: 1.5rem; margin-bottom: 1.5rem;" id="customerChartWrapper" onclick="openModal('customerModal')">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+        <div>
+          <h3 style="margin: 0 0 0.5rem 0;">🏆 10 อันดับลูกค้าที่คืนยามูลค่าสูงสุด</h3>
+          <p style="margin: 0 0 0.5rem 0; font-size: 0.8rem; color: #94a3b8;">คลิกที่แถบเพื่อดูรายละเอียด หรือคลิกที่กราฟเพื่อดูทั้งหมด</p>
+        </div>
+        <span style="color: #8b5cf6; font-size: 0.8rem; background: rgba(139,92,246,0.1); padding: 0.2rem 0.5rem; border-radius: 4px;">คลิกดูทั้งหมด</span>
+      </div>
+      <div class="chart-container" style="height: 420px;">
+        <canvas id="customerChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Charts Row 1: Products and Process Status -->
+    <div class="grid-2">
+      <div class="glass clickable-chart" style="padding: 1.5rem;" onclick="openModal('productModal')">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+          <div>
+            <h3 style="margin: 0 0 0.5rem 0;">10 อันดับยาที่มีการคืนสูงสุด (ตามมูลค่า)</h3>
+            <div style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem;" onclick="event.stopPropagation()">
+              <button class="chart-toggle-btn active" onclick="setChartFilter('barChart', 'Neoca', this)">Neoca</button>
+              <button class="chart-toggle-btn" onclick="setChartFilter('barChart', 'Prosp', this)">Prosp</button>
+            </div>
+          </div>
+          <span style="color: #38bdf8; font-size: 0.8rem; background: rgba(56, 189, 248, 0.1); padding: 0.2rem 0.5rem; border-radius: 4px;">คลิกดูทั้งหมด</span>
+        </div>
+        <div class="chart-container"><canvas id="barChart"></canvas></div>
+      </div>
+      <div class="glass clickable-chart" style="padding: 1.5rem;" onclick="openModal('qaWhModal')">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+          <div>
+            <h3 style="margin: 0 0 0.5rem 0;">การจัดการโดยคลัง (QA/WH) (%)</h3>
+            <p style="margin: 0 0 1rem 0; font-size: 0.8rem; color: #94a3b8;">ข้อมูลสถานะสินค้าคืนจากคลัง</p>
+          </div>
+          <span style="color: #38bdf8; font-size: 0.8rem; background: rgba(56, 189, 248, 0.1); padding: 0.2rem 0.5rem; border-radius: 4px;">คลิกดูทั้งหมด</span>
+        </div>
+        <div class="chart-container"><canvas id="qaWhChart"></canvas></div>
+      </div>
+    </div>
+
+    <!-- Charts Row 2: Reasons and QA Result -->
+    <div class="grid-2">
+      <div class="glass clickable-chart" style="padding: 1.5rem;" onclick="openModal('reasonModal')">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+          <div>
+            <h3 style="margin: 0 0 0.5rem 0;">5 อันดับสาเหตุการคืนยา (%)</h3>
+            <div style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem;" onclick="event.stopPropagation()">
+              <button class="chart-toggle-btn active" onclick="setChartFilter('reasonChart', 'Neoca', this)">Neoca</button>
+              <button class="chart-toggle-btn" onclick="setChartFilter('reasonChart', 'Prosp', this)">Prosp</button>
+            </div>
+          </div>
+          <span style="color: #38bdf8; font-size: 0.8rem; background: rgba(56, 189, 248, 0.1); padding: 0.2rem 0.5rem; border-radius: 4px;">คลิกดูสาเหตุทั้งหมด</span>
+        </div>
+        <div class="chart-container"><canvas id="reasonChart"></canvas></div>
+      </div>
+      <div class="glass clickable-chart" style="padding: 1.5rem;" onclick="openModal('qaResultModal')">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+          <div>
+            <h3 style="margin: 0 0 0.5rem 0;">ผลประเมินจาก QA (%)</h3>
+            <p style="margin: 0 0 1rem 0; font-size: 0.8rem; color: #94a3b8;">สรุปผลประเมินขั้นสุดท้าย</p>
+          </div>
+          <span style="color: #38bdf8; font-size: 0.8rem; background: rgba(56, 189, 248, 0.1); padding: 0.2rem 0.5rem; border-radius: 4px;">คลิกดูทั้งหมด</span>
+        </div>
+        <div class="chart-container"><canvas id="qaResultChart"></canvas></div>
+      </div>
+    </div>
+
+
+    <!-- Supabase Panel -->
+    <div class="glass" style="padding: 1.5rem;">
+      <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
+        <span style="font-size: 1.3rem;">🗄️</span>
+        <h3 style="margin: 0;">เชื่อมต่อ Supabase (เก็บข้อมูลบนคลาวด์)</h3>
+        <span id="supabaseStatus" class="supabase-status status-idle">ยังไม่เชื่อมต่อ</span>
+      </div>
+      <div class="supabase-panel" style="display: none;">
+        <input id="sbUrl" class="supabase-input" placeholder="Supabase Project URL" value="https://atpseyotafqwkmoxylou.supabase.co" readonly />
+        <input id="sbKey" class="supabase-input" placeholder="Supabase Anon Key" type="password" value="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF0cHNleW90YWZxd2ttb3h5bG91Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzMTUwODgsImV4cCI6MjA5NDg5MTA4OH0.bMjIoGBqNtakZ7nUuphOERfw_vwyBSCV8s0ozaitcwg" readonly />
+        <button class="supabase-btn" onclick="connectSupabase()">🔗 เชื่อมต่อ</button>
+        <button class="supabase-btn" id="syncBtn" disabled onclick="syncToSupabase()" style="background: linear-gradient(135deg,#6366f1,#4f46e5);">☁️ Sync ข้อมูล</button>
+        <button class="supabase-btn" id="loadBtn" disabled onclick="loadFromSupabase()" style="background: linear-gradient(135deg,#f59e0b,#d97706);">📥 โหลดจาก Supabase</button>
+      </div>
+      <p id="sbMsg" style="margin: 0.75rem 0 0 0; font-size: 0.8rem; color: #94a3b8;"></p>
+    </div>
+
+    <!-- Full Data Table at the bottom -->
+    <div class="glass" style="padding: 1.5rem; display: flex; flex-direction: column;">
+      <h3 style="margin: 0 0 1rem 0;">ข้อมูลรายละเอียดรายการทั้งหมด (สอบกลับ)</h3>
+      <div style="overflow-x: auto; flex: 1; max-height: 500px;">
+        <table id="dataTable">
+          <thead>
+            <tr>
+              <th>บิลเลขที่</th>
+              <th>วันที่ออกบิล</th>
+              <th>ชื่อลูกค้า</th>
+              <th>Item Code</th>
+              <th>Product Name</th>
+              <th>Lot NO</th>
+              <th>Mfg.D</th>
+              <th>Exp.D</th>
+              <th>จำนวน</th>
+              <th>U/M</th>
+              <th style="text-align: right;">มูลค่ารวม</th>
+              <th>สาเหตุการคืน</th>
+              <th>สถานะสุดท้าย (Flow)</th>
+              <th>QA/WH (ดิบ)</th>
+              <th>ผลประเมิน (ดิบ)</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modals -->
+  <div id="productModal" class="modal-overlay" onclick="handleOverlayClick(event, 'productModal')">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 style="margin:0;">รายการยาทั้งหมดที่ถูกคืน (เรียงตามมูลค่า)</h3>
+        <button class="close-btn" onclick="closeModal('productModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <table id="productModalTable">
+          <thead>
+            <tr>
+              <th style="position: sticky; top: -24px;">สินค้า (Product Name)</th>
+              <th style="text-align:right; position: sticky; top: -24px;">มูลค่ารวม (บาท)</th>
+              <th style="text-align:right; position: sticky; top: -24px;">สัดส่วน (% ของมูลค่ารวม)</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div id="reasonModal" class="modal-overlay" onclick="handleOverlayClick(event, 'reasonModal')">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 style="margin:0;">สาเหตุการคืนยาทั้งหมด</h3>
+        <button class="close-btn" onclick="closeModal('reasonModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <table id="reasonModalTable">
+          <thead>
+            <tr>
+              <th style="position: sticky; top: -24px;">สาเหตุการคืน</th>
+              <th style="text-align:right; position: sticky; top: -24px;">จำนวนรายการ</th>
+              <th style="text-align:right; position: sticky; top: -24px;">สัดส่วน (% ของรายการทั้งหมด)</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div id="qaWhModal" class="modal-overlay" onclick="handleOverlayClick(event, 'qaWhModal')">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 style="margin:0;">รายละเอียดการจัดการโดยคลัง (QA/WH)</h3>
+        <button class="close-btn" onclick="closeModal('qaWhModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <table id="qaWhModalTable">
+          <thead>
+            <tr>
+              <th style="position: sticky; top: -24px;">สถานะจากคลัง</th>
+              <th style="text-align:right; position: sticky; top: -24px;">จำนวนรายการ</th>
+              <th style="text-align:right; position: sticky; top: -24px;">สัดส่วน (%)</th>
+              <th style="text-align:right; position: sticky; top: -24px;">มูลค่า (บาท)</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div id="qaResultModal" class="modal-overlay" onclick="handleOverlayClick(event, 'qaResultModal')">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 style="margin:0;">รายละเอียดผลประเมินจาก QA</h3>
+        <button class="close-btn" onclick="closeModal('qaResultModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <table id="qaResultModalTable">
+          <thead>
+            <tr>
+              <th style="position: sticky; top: -24px;">ผลประเมิน QA</th>
+              <th style="text-align:right; position: sticky; top: -24px;">จำนวนรายการ</th>
+              <th style="text-align:right; position: sticky; top: -24px;">สัดส่วน (%)</th>
+              <th style="text-align:right; position: sticky; top: -24px;">มูลค่า (บาท)</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Customer Modal -->
+  <div id="customerModal" class="modal-overlay" onclick="handleOverlayClick(event, 'customerModal')">
+    <div class="modal-content" style="max-width: 860px;">
+      <div class="modal-header">
+        <h3 style="margin:0;">🏆 รายชื่อลูกค้าที่คืนยา (เรียงตามมูลค่า)</h3>
+        <button class="close-btn" onclick="closeModal('customerModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <table id="customerModalTable">
+          <thead>
+            <tr>
+              <th style="position: sticky; top: -24px;">#</th>
+              <th style="position: sticky; top: -24px;">ชื่อลูกค้า</th>
+              <th style="text-align:right; position: sticky; top: -24px;">จำนวนรายการ</th>
+              <th style="text-align:right; position: sticky; top: -24px;">มูลค่าคืนรวม (บาท)</th>
+              <th style="text-align:right; position: sticky; top: -24px;">สัดส่วน (%)</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Customer Detail Tooltip -->
+  <div id="customerTooltip" class="customer-tooltip" style="display:none; opacity:0;"></div>
+
+  <script>
+    // --- Global State ---
+    let allData = [];
+    let charts = {};
+    let currentFilteredData = [];
+    let activeChartFilter = { barChart: 'Neoca', reasonChart: 'Neoca' };
+    let supabaseClient = null;
+    let customerChartData = []; // store for tooltip use
+
+    // --- Chart Global Defaults ---
+    Chart.register(ChartDataLabels);
+    Chart.defaults.color = '#94a3b8';
+    Chart.defaults.font.family = "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif";
+    const bgColors = ['#38bdf8', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16', '#14b8a6', '#f43f5e'];
+
+    // --- UI Elements ---
+    const uploader = document.getElementById('uploader');
+    const dashboard = document.getElementById('dashboard');
+    const clearBtn = document.getElementById('clearBtn');
+    const fileInput = document.getElementById('fileInput');
+    const fileInputMore = document.getElementById('fileInputMore');
+    const errorMsg = document.getElementById('errorMsg');
+
+    // Filters
+    const filterCompany = document.getElementById('filterCompany');
+    const filterMonth = document.getElementById('filterMonth');
+    const startDate = document.getElementById('startDate');
+    const endDate = document.getElementById('endDate');
+    const clearDateBtn = document.getElementById('clearDateBtn');
+    const searchInput = document.getElementById('searchInput');
+
+    // Load persisted data
+    localforage.getItem('returnedData').then(data => {
+      if (data && data.length > 0) {
+        allData = data;
+        updateView();
+      }
+    });
+
+    // --- Drag & Drop Handlers ---
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+      uploader.addEventListener(eventName, e => { e.preventDefault(); e.stopPropagation(); }, false);
+    });
+    ['dragenter', 'dragover'].forEach(eventName => {
+      uploader.addEventListener(eventName, () => uploader.classList.add('dragging'), false);
+    });
+    ['dragleave', 'drop'].forEach(eventName => {
+      uploader.addEventListener(eventName, () => uploader.classList.remove('dragging'), false);
+    });
+    uploader.addEventListener('drop', (e) => handleFiles(e.dataTransfer.files), false);
+    fileInput.addEventListener('change', (e) => handleFiles(e.target.files), false);
+    fileInputMore.addEventListener('change', (e) => handleFiles(e.target.files), false);
+
+    clearBtn.addEventListener('click', () => {
+      allData = [];
+      localforage.removeItem('returnedData');
+      updateView();
+    });
+
+    [filterCompany, filterMonth, startDate, endDate].forEach(el => {
+      el.addEventListener('change', renderDashboard);
+    });
+    searchInput.addEventListener('input', renderDashboard);
+    
+    clearDateBtn.addEventListener('click', () => {
+      startDate.value = '';
+      endDate.value = '';
+      renderDashboard();
+    });
+
+    // --- Modals ---
+    function openModal(id) {
+      document.getElementById(id).style.display = 'flex';
+      if (id === 'productModal') renderProductModal();
+      if (id === 'reasonModal') renderReasonModal();
+      if (id === 'qaWhModal') renderQaWhModal();
+      if (id === 'qaResultModal') renderQaResultModal();
+      if (id === 'customerModal') renderCustomerModal();
+    }
+    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+    function handleOverlayClick(e, id) {
+      if (e.target.id === id) closeModal(id);
+    }
+
+    // --- File Processing ---
+    async function handleFiles(files) {
+      errorMsg.style.display = 'none';
+      const csvFiles = Array.from(files).filter(f => f.name.toLowerCase().endsWith('.csv'));
+      if (csvFiles.length === 0) {
+        errorMsg.textContent = 'กรุณาอัปโหลดไฟล์ CSV เท่านั้น';
+        errorMsg.style.display = 'block';
+        return;
+      }
+      for (let file of csvFiles) {
+        await parseCSV(file);
+      }
+      localforage.setItem('returnedData', allData);
+      updateView();
+      
+      // Auto-sync to Supabase after file load
+      if (supabaseClient) {
+        syncToSupabase();
+      }
+    }
+
+    function parseCSV(file) {
+      return new Promise((resolve) => {
+        Papa.parse(file, {
+          header: true,
+          skipEmptyLines: true,
+          encoding: "UTF-8",
+          transformHeader: function(h) { return h.trim(); }, // Fixes trailing space issues in headers
+          complete: function(results) {
+            let company = 'Unknown';
+            if (file.name.toLowerCase().includes('neoca')) company = 'Neoca';
+            if (file.name.toLowerCase().includes('prosp')) company = 'Prosp';
+
+            let extractedMonthStr = 'Unknown';
+            let returnMonthMs = 0;
+            const thMonths = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+            const enMonths = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            const monthRegex = new RegExp(`(${thMonths.join('|')})\\s*(\\d{4})`);
+            const match = file.name.match(monthRegex);
+            if (match) {
+               const mIndex = thMonths.indexOf(match[1]);
+               const yearTH = match[2];
+               extractedMonthStr = `${enMonths[mIndex]} ${yearTH}`;
+               const yearAD = parseInt(yearTH, 10) - 543;
+               returnMonthMs = new Date(yearAD, mIndex, 1).getTime();
+            }
+
+            const parsedRows = results.data.map(row => {
+              const rawPrice = row['ราคารวมหลังส่วนลด'] || row[' ราคารวมหลังส่วนลด '] || '0';
+              const cleanPrice = rawPrice.toString().replace(/,/g, '').replace(/"/g, '').trim();
+              
+              let billDate = (row['วันที่ออกบิล'] || '').trim();
+              let parsedDate = null;
+              const parts = billDate.split('/');
+              if (parts.length === 3) {
+                parsedDate = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`).getTime();
+              }
+
+              // Evaluate process flow (QA/WH -> QA)
+              let qaWh = (row['QA/WH'] || '-').trim();
+              let qaResult = (row['ผลประเมินจากQA'] || '-').trim();
+              let finalStatus = 'ไม่ระบุ';
+
+              if (qaWh.includes('เข้าคลัง') || qaWh.includes('รับคืน')) {
+                finalStatus = '✅ คลัง: นำกลับเข้าคลัง';
+              } else if (qaWh.includes('ทำลาย')) {
+                finalStatus = '🗑️ คลัง: ทำลาย';
+              } else if (qaWh.includes('ประเมิน') || qaWh.match(/\d+\/\d+/)) {
+                if (qaResult === '-' || qaResult === '') {
+                  finalStatus = '⏳ รอผลประเมิน QA';
+                } else if (qaResult.includes('เข้าคลัง')) {
+                  finalStatus = '✅ QA สรุป: นำกลับเข้าคลัง';
+                } else if (qaResult.includes('ทำลาย')) {
+                  finalStatus = '🗑️ QA สรุป: ทำลาย';
+                } else {
+                  finalStatus = '📋 QA สรุป: ' + qaResult;
+                }
+              } else {
+                if(qaWh !== '-' && qaWh !== '') finalStatus = 'WH: ' + qaWh;
+              }
+
+              return {
+                company,
+                monthStr: extractedMonthStr,
+                returnMonthMs,
+                qty: parseInt(row['จำนวน'] || 0, 10),
+                totalPrice: parseFloat(cleanPrice || 0),
+                billDate,
+                parsedDate,
+                billNo: (row['บิลเลขที่'] || '').trim(),
+                lot: (row['Lot NO'] || row['Lot No.'] || row['Lot'] || row['LOT'] || '').trim(),
+                mfgD: (row['Mfg.D'] || row['Mfg.Date'] || row['Mfg.'] || '').trim(),
+                expD: (row['Exp.D'] || row['Exp.Date'] || row['Exp.'] || '').trim(),
+                itemCode: (row['ITEM CODE'] || row['Item Code'] || row['รหัสสินค้า'] || '').trim(),
+                um: (row['U/M'] || row['Unit'] || row['UM'] || row['หน่วย'] || '').trim(),
+                qaResult,
+                returnReason: (row['สาเหตุการคืน'] || '-').trim(),
+                customerName: (row['ชื่อลูกค้า'] || '-').trim(),
+                productName: (row['Product Name'] || '-').trim(),
+                qaWh,
+                finalStatus
+              };
+            }).filter(row => row.billNo);
+
+            allData = [...allData, ...parsedRows];
+            resolve();
+          }
+        });
+      });
+    }
+
+    // --- Dashboard Rendering ---
+    function updateView() {
+      if (allData.length === 0) {
+        uploader.style.display = 'flex';
+        dashboard.style.display = 'none';
+        clearBtn.style.display = 'none';
+      } else {
+        uploader.style.display = 'none';
+        dashboard.style.display = 'flex';
+        clearBtn.style.display = 'block';
+        updateFilters();
+        renderDashboard();
+      }
+    }
+
+    function updateFilters() {
+      const companies = [...new Set(allData.map(d => d.company))].sort();
+      populateSelect(filterCompany, companies, 'ทุกบริษัท');
+
+      const months = [...new Set(allData.map(d => d.monthStr))].filter(m => m !== 'Unknown').sort().reverse();
+      populateSelect(filterMonth, months, 'ทุกเดือน');
+    }
+
+    function populateSelect(selectEl, items, defaultText) {
+      const currentVal = selectEl.value;
+      selectEl.innerHTML = `<option value="All">${defaultText}</option>`;
+      items.forEach(item => {
+        if(item) selectEl.innerHTML += `<option value="${item}">${item}</option>`;
+      });
+      if(items.includes(currentVal)) selectEl.value = currentVal;
+    }
+
+    const formatCurrency = (val) => new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB' }).format(val);
+
+    function getBadgeClass(status) {
+      if (status.includes('✅')) return 'badge bg-green';
+      if (status.includes('🗑️')) return 'badge bg-red';
+      if (status.includes('⏳')) return 'badge bg-yellow';
+      return 'badge bg-blue';
+    }
+
+    function renderDashboard() {
+      const cFilter = filterCompany.value;
+      const mFilter = filterMonth.value;
+      const sTime = startDate.value ? new Date(startDate.value).getTime() : null;
+      const eTime = endDate.value ? new Date(endDate.value).getTime() + 86399999 : null;
+
+      currentFilteredData = allData.filter(d => {
+        if (cFilter !== 'All' && d.company !== cFilter) return false;
+        if (mFilter !== 'All' && d.monthStr !== mFilter) return false;
+        if (sTime && d.parsedDate && d.parsedDate < sTime) return false;
+        if (eTime && d.parsedDate && d.parsedDate > eTime) return false;
+
+        const searchVal = (searchInput.value || '').toLowerCase();
+        if (searchVal) {
+          const searchFields = [d.billNo, d.billDate, d.customerName, d.itemCode, d.productName, d.lot, d.mfgD, d.expD, d.um, d.returnReason, d.qaWh, d.qaResult];
+          const match = searchFields.some(val => (val || '').toString().toLowerCase().includes(searchVal));
+          if (!match) return false;
+        }
+        
+        return true;
+      });
+
+      const filtered = currentFilteredData;
+
+      // Compute Summaries
+      const totalValue = filtered.reduce((sum, d) => sum + (d.totalPrice || 0), 0);
+      const valNeoca = filtered.filter(d => d.company === 'Neoca').reduce((sum, d) => sum + (d.totalPrice || 0), 0);
+      const valProsp = filtered.filter(d => d.company === 'Prosp').reduce((sum, d) => sum + (d.totalPrice || 0), 0);
+
+      const uniqueBillsCount = new Set(filtered.map(d => d.billNo).filter(Boolean)).size;
+      const billNeoca = new Set(filtered.filter(d => d.company === 'Neoca').map(d => d.billNo).filter(Boolean)).size;
+      const billProsp = new Set(filtered.filter(d => d.company === 'Prosp').map(d => d.billNo).filter(Boolean)).size;
+
+      const uniqueLotsCount = new Set(filtered.map(d => d.lot).filter(l => l && l !== '-')).size;
+      const lotNeoca = new Set(filtered.filter(d => d.company === 'Neoca').map(d => d.lot).filter(l => l && l !== '-')).size;
+      const lotProsp = new Set(filtered.filter(d => d.company === 'Prosp').map(d => d.lot).filter(l => l && l !== '-')).size;
+      
+
+
+      // Update UI Cards
+      document.getElementById('sumValue').innerText = formatCurrency(totalValue);
+      document.getElementById('valNeoca').innerText = 'Neoca: ' + formatCurrency(valNeoca);
+      document.getElementById('valProsp').innerText = 'Prosp: ' + formatCurrency(valProsp);
+
+      document.getElementById('sumRows').innerText = uniqueBillsCount.toLocaleString() + ' รายการ';
+      document.getElementById('billNeoca').innerText = 'Neoca: ' + billNeoca.toLocaleString();
+      document.getElementById('billProsp').innerText = 'Prosp: ' + billProsp.toLocaleString();
+
+      document.getElementById('sumLots').innerText = uniqueLotsCount.toLocaleString() + ' Lot';
+      document.getElementById('lotNeoca').innerText = 'Neoca: ' + lotNeoca.toLocaleString();
+      document.getElementById('lotProsp').innerText = 'Prosp: ' + lotProsp.toLocaleString();
+
+
+
+      // Update Full Table
+      const tbody = document.querySelector('#dataTable tbody');
+      tbody.innerHTML = '';
+      filtered.forEach(row => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${row.billNo}</td>
+          <td>${row.billDate}</td>
+          <td title="${row.customerName}">${row.customerName}</td>
+          <td>${row.itemCode}</td>
+          <td title="${row.productName}">${row.productName}</td>
+          <td>${row.lot}</td>
+          <td>${row.mfgD}</td>
+          <td>${row.expD}</td>
+          <td>${row.qty}</td>
+          <td>${row.um}</td>
+          <td style="text-align:right; color:#38bdf8;">${formatCurrency(row.totalPrice)}</td>
+          <td title="${row.returnReason}">${row.returnReason}</td>
+          <td><span class="${getBadgeClass(row.finalStatus)}">${row.finalStatus}</span></td>
+          <td title="${row.qaWh}">${row.qaWh}</td>
+          <td title="${row.qaResult}">${row.qaResult}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      // Prepare Chart Data
+      const qaWhMap = {};
+      const qaResultMap = {};
+      const overallReasonMap = {};
+      const overallReasonNeocaMap = {};
+      const overallReasonProspMap = {};
+      const monthlyMapNeoca = {};
+      const monthlyMapProsp = {};
+      const monthDateMap = {};
+      
+      filtered.forEach(d => {
+        if (d.qaWh && d.qaWh !== '-') qaWhMap[d.qaWh] = (qaWhMap[d.qaWh] || 0) + 1;
+        if (d.qaResult && d.qaResult !== '-') qaResultMap[d.qaResult] = (qaResultMap[d.qaResult] || 0) + 1;
+        
+        overallReasonMap[d.returnReason] = (overallReasonMap[d.returnReason] || 0) + 1;
+        if (d.company === 'Neoca') overallReasonNeocaMap[d.returnReason] = (overallReasonNeocaMap[d.returnReason] || 0) + 1;
+        if (d.company === 'Prosp') overallReasonProspMap[d.returnReason] = (overallReasonProspMap[d.returnReason] || 0) + 1;
+
+        if (d.monthStr && d.monthStr !== 'Unknown') {
+          if (!monthDateMap[d.monthStr]) {
+            monthDateMap[d.monthStr] = d.returnMonthMs || 0;
+          }
+          if (d.company === 'Neoca') monthlyMapNeoca[d.monthStr] = (monthlyMapNeoca[d.monthStr] || 0) + (d.totalPrice || 0);
+          if (d.company === 'Prosp') monthlyMapProsp[d.monthStr] = (monthlyMapProsp[d.monthStr] || 0) + (d.totalPrice || 0);
+        }
+      });
+
+      const sortedQaWh = Object.keys(qaWhMap).map(k => ({name:k, val:qaWhMap[k]})).sort((a,b)=>b.val-a.val);
+      const totalQaWh = sortedQaWh.reduce((sum, item) => sum + item.val, 0) || 1;
+      drawPieChartPercent('qaWhChart', sortedQaWh.map(p=>p.name), sortedQaWh.map(p=>p.val), totalQaWh);
+
+      const sortedQaResult = Object.keys(qaResultMap).map(k => ({name:k, val:qaResultMap[k]})).sort((a,b)=>b.val-a.val);
+      const totalQaResult = sortedQaResult.reduce((sum, item) => sum + item.val, 0) || 1;
+      drawPieChartPercent('qaResultChart', sortedQaResult.map(p=>p.name), sortedQaResult.map(p=>p.val), totalQaResult);
+
+      // Monthly Trend Chart
+      const enMonths = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      const uniqueYears = new Set();
+      filtered.forEach(d => {
+        if (d.monthStr && d.monthStr !== 'Unknown') {
+          const parts = d.monthStr.split(' ');
+          if (parts.length === 2) uniqueYears.add(parts[1]);
+        }
+      });
+      let allMonthsToDisplay = [];
+      if (uniqueYears.size > 0) {
+        const sortedYears = Array.from(uniqueYears).sort();
+        sortedYears.forEach(y => {
+          enMonths.forEach(m => allMonthsToDisplay.push(`${m} ${y}`));
+        });
+      } else {
+        allMonthsToDisplay = Object.keys(monthDateMap).sort((a,b) => monthDateMap[a] - monthDateMap[b]);
+      }
+      
+      const monthlyNeocaVals = allMonthsToDisplay.map(m => monthlyMapNeoca[m] || 0);
+      const monthlyProspVals = allMonthsToDisplay.map(m => monthlyMapProsp[m] || 0);
+      drawGroupedBarChartValue('monthlyChart', allMonthsToDisplay, monthlyNeocaVals, monthlyProspVals, 'x', true);
+
+      // Top Products Chart
+      const prodFiltered = filtered.filter(d => d.company === activeChartFilter.barChart);
+      const prodMap = {};
+      prodFiltered.forEach(d => { prodMap[d.productName] = (prodMap[d.productName] || 0) + d.totalPrice; });
+      const sortedProds = Object.keys(prodMap).map(k => ({name:k, val:prodMap[k]})).sort((a,b)=>b.val-a.val).slice(0, 10);
+      const colorProd = activeChartFilter.barChart === 'Neoca' ? '#38bdf8' : '#10b981';
+      drawBarChartValue('barChart', sortedProds.map(p=>p.name), sortedProds.map(p=>p.val), 'y', colorProd);
+
+      // Top Reasons Chart
+      const reasonFiltered = filtered.filter(d => d.company === activeChartFilter.reasonChart);
+      const reasonMap = {};
+      reasonFiltered.forEach(d => { reasonMap[d.returnReason] = (reasonMap[d.returnReason] || 0) + 1; });
+      const sortedReasons = Object.keys(reasonMap).map(k => ({name:k, val:reasonMap[k]})).sort((a,b)=>b.val-a.val).slice(0, 5);
+      const colorReason = activeChartFilter.reasonChart === 'Neoca' ? '#38bdf8' : '#10b981';
+      drawBarChartPercent('reasonChart', sortedReasons.map(p=>p.name), sortedReasons.map(p=>p.val), reasonFiltered.length, 'y', colorReason);
+
+      // Top 10 Customers Chart
+      const custMap = {};
+      const custCountMap = {};
+      filtered.forEach(d => {
+        if (d.customerName && d.customerName !== '-') {
+          custMap[d.customerName] = (custMap[d.customerName] || 0) + (d.totalPrice || 0);
+          custCountMap[d.customerName] = (custCountMap[d.customerName] || 0) + 1;
+        }
+      });
+      const totalCustValue = Object.values(custMap).reduce((s,v) => s+v, 0) || 1;
+      const sortedCusts = Object.keys(custMap)
+        .map(k => ({ name: k, val: custMap[k], count: custCountMap[k] }))
+        .sort((a,b) => b.val - a.val)
+        .slice(0, 10);
+      customerChartData = sortedCusts;
+      drawCustomerChart('customerChart', sortedCusts, totalCustValue);
+
+      // Update Top Reason Card Breakdowns
+      const topOverallReasonArr = Object.keys(overallReasonMap).sort((a,b) => overallReasonMap[b] - overallReasonMap[a]);
+      const currentTopReason = topOverallReasonArr.length > 0 ? topOverallReasonArr[0] : '-';
+      document.getElementById('sumReason').innerText = currentTopReason;
+      document.getElementById('sumReason').title = currentTopReason;
+      document.getElementById('reasonNeoca').innerText = 'Neoca: ' + (overallReasonNeocaMap[currentTopReason] || 0);
+      document.getElementById('reasonProsp').innerText = 'Prosp: ' + (overallReasonProspMap[currentTopReason] || 0);
+    }
+
+    function setChartFilter(canvasId, filter, btnEl) {
+      activeChartFilter[canvasId] = filter;
+      const parent = btnEl.parentElement;
+      parent.querySelectorAll('.chart-toggle-btn').forEach(btn => btn.classList.remove('active'));
+      btnEl.classList.add('active');
+      renderDashboard();
+    }
+
+    function renderProductModal() {
+      const prodMap = {};
+      let totalAllValue = 0; // Fix % calculation issue
+      currentFilteredData.forEach(d => {
+        prodMap[d.productName] = (prodMap[d.productName] || 0) + (d.totalPrice || 0);
+        totalAllValue += (d.totalPrice || 0);
+      });
+      const sortedProds = Object.keys(prodMap).map(k => ({name:k, val:prodMap[k]})).sort((a,b)=>b.val-a.val);
+
+      const tbody = document.querySelector('#productModalTable tbody');
+      tbody.innerHTML = '';
+      sortedProds.forEach(p => {
+        const percent = totalAllValue > 0 ? ((p.val / totalAllValue) * 100).toFixed(2) : 0;
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${p.name}</td>
+          <td style="text-align:right; color:#38bdf8;">${formatCurrency(p.val)}</td>
+          <td style="text-align:right;">${percent}%</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function renderReasonModal() {
+      const reasonMap = {};
+      const totalAll = currentFilteredData.length;
+      currentFilteredData.forEach(d => {
+        reasonMap[d.returnReason] = (reasonMap[d.returnReason] || 0) + 1;
+      });
+      const sortedReasons = Object.keys(reasonMap).map(k => ({name:k, val:reasonMap[k]})).sort((a,b)=>b.val-a.val);
+
+      const tbody = document.querySelector('#reasonModalTable tbody');
+      tbody.innerHTML = '';
+      sortedReasons.forEach(r => {
+        const percent = totalAll > 0 ? ((r.val / totalAll) * 100).toFixed(2) : 0;
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${r.name}</td>
+          <td style="text-align:right; color:#f59e0b;">${r.val}</td>
+          <td style="text-align:right;">${percent}%</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function renderQaWhModal() {
+      const map = {};
+      let totalAllCount = 0;
+      currentFilteredData.forEach(d => {
+        if (d.qaWh && d.qaWh !== '-') {
+          if (!map[d.qaWh]) map[d.qaWh] = { count: 0, val: 0 };
+          map[d.qaWh].count += 1;
+          map[d.qaWh].val += (d.totalPrice || 0);
+          totalAllCount += 1;
+        }
+      });
+      const sorted = Object.keys(map).map(k => ({name:k, ...map[k]})).sort((a,b)=>b.count-a.count);
+
+      const tbody = document.querySelector('#qaWhModalTable tbody');
+      tbody.innerHTML = '';
+      sorted.forEach(r => {
+        const percent = totalAllCount > 0 ? ((r.count / totalAllCount) * 100).toFixed(2) : 0;
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${r.name}</td>
+          <td style="text-align:right; color:#f59e0b;">${r.count}</td>
+          <td style="text-align:right;">${percent}%</td>
+          <td style="text-align:right; color:#38bdf8;">${formatCurrency(r.val)}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function renderCustomerModal() {
+      const custMap = {};
+      const custCountMap = {};
+      let totalVal = 0;
+      currentFilteredData.forEach(d => {
+        if (d.customerName && d.customerName !== '-') {
+          custMap[d.customerName] = (custMap[d.customerName] || 0) + (d.totalPrice || 0);
+          custCountMap[d.customerName] = (custCountMap[d.customerName] || 0) + 1;
+          totalVal += (d.totalPrice || 0);
+        }
+      });
+      const sorted = Object.keys(custMap)
+        .map(k => ({ name: k, val: custMap[k], count: custCountMap[k] }))
+        .sort((a,b) => b.val - a.val);
+
+      const tbody = document.querySelector('#customerModalTable tbody');
+      tbody.innerHTML = '';
+      sorted.forEach((c, i) => {
+        const pct = totalVal > 0 ? ((c.val / totalVal) * 100).toFixed(2) : 0;
+        const tr = document.createElement('tr');
+        const rankColor = i === 0 ? '#f59e0b' : i === 1 ? '#94a3b8' : i === 2 ? '#cd7c2f' : '#64748b';
+        const rankIcon = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i+1}`;
+        tr.innerHTML = `
+          <td style="color:${rankColor}; font-weight:bold;">${rankIcon}</td>
+          <td title="${c.name}">${c.name}</td>
+          <td style="text-align:right; color:#f59e0b;">${c.count.toLocaleString()}</td>
+          <td style="text-align:right; color:#8b5cf6; font-weight:bold;">${formatCurrency(c.val)}</td>
+          <td style="text-align:right;"><span style="background:rgba(139,92,246,0.15);color:#8b5cf6;padding:0.2rem 0.5rem;border-radius:4px;">${pct}%</span></td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // --- Customer Chart with hover popup ---
+    function drawCustomerChart(canvasId, data, totalValue) {
+      if (charts[canvasId]) charts[canvasId].destroy();
+      const ctx = document.getElementById(canvasId).getContext('2d');
+      const tooltip = document.getElementById('customerTooltip');
+
+      const purpleGrad = bgColors.map((_, i) => {
+        const alpha = 1 - (i * 0.06);
+        return `rgba(139,92,246,${Math.max(alpha, 0.4)})`;
+      });
+
+      charts[canvasId] = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: data.map(d => d.name.length > 28 ? d.name.slice(0,28)+'…' : d.name),
+          datasets: [{
+            data: data.map(d => d.val),
+            backgroundColor: purpleGrad.slice(0, data.length),
+            borderRadius: 6,
+            borderSkipped: false
+          }]
+        },
+        options: {
+          indexAxis: 'y',
+          responsive: true,
+          maintainAspectRatio: false,
+          layout: { padding: { right: 100 } },
+          onHover: (event, elements) => {
+            if (elements.length > 0) {
+              const idx = elements[0].index;
+              const d = data[idx];
+              const pct = totalValue > 0 ? ((d.val / totalValue) * 100).toFixed(2) : 0;
+              const rankIcon = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `อันดับ ${idx+1}`;
+              tooltip.innerHTML = `
+                <div class="tooltip-rank">${rankIcon}</div>
+                <div class="tooltip-name">${d.name}</div>
+                <div class="tooltip-value">${formatCurrency(d.val)}</div>
+                <div class="tooltip-pct">🎯 สัดส่วน: ${pct}% ของมูลค่ารวม</div>
+                <div class="tooltip-items">📋 จำนวนรายการ: ${d.count.toLocaleString()} รายการ</div>
+              `;
+              const rect = document.getElementById(canvasId).getBoundingClientRect();
+              let tx = event.native.clientX + 20;
+              let ty = event.native.clientY - 20;
+              if (tx + 250 > window.innerWidth) tx = event.native.clientX - 270;
+              tooltip.style.left = tx + 'px';
+              tooltip.style.top = ty + 'px';
+              tooltip.style.display = 'block';
+              tooltip.style.opacity = '1';
+              document.getElementById(canvasId).style.cursor = 'pointer';
+            } else {
+              tooltip.style.opacity = '0';
+              setTimeout(() => { if (tooltip.style.opacity === '0') tooltip.style.display = 'none'; }, 150);
+              document.getElementById(canvasId).style.cursor = 'default';
+            }
+          },
+          onClick: (event, elements) => {
+            if (elements.length > 0) {
+              event.native.stopPropagation();
+              openModal('customerModal');
+            }
+          },
+          plugins: {
+            legend: { display: false },
+            datalabels: {
+              anchor: 'end',
+              align: 'right',
+              color: '#8b5cf6',
+              formatter: (value) => {
+                const pct = totalValue > 0 ? ((value/totalValue)*100).toFixed(1) : 0;
+                return value > 0 ? `${formatCurrency(value)}  (${pct}%)` : '';
+              },
+              font: { size: 10, weight: 'bold' }
+            }
+          },
+          scales: {
+            x: { grid: { color: '#334155' }, ticks: { font: { size: 10 } } },
+            y: { grid: { display: false }, ticks: { font: { size: 11 }, color: '#cbd5e1' } }
+          }
+        }
+      });
+
+      // Hide tooltip when mouse leaves canvas
+      document.getElementById(canvasId).addEventListener('mouseleave', () => {
+        tooltip.style.opacity = '0';
+        setTimeout(() => { tooltip.style.display = 'none'; }, 150);
+      }, { passive: true });
+    }
+
+    function renderQaResultModal() {
+      const map = {};
+      let totalAllCount = 0;
+      currentFilteredData.forEach(d => {
+        if (d.qaResult && d.qaResult !== '-') {
+          if (!map[d.qaResult]) map[d.qaResult] = { count: 0, val: 0 };
+          map[d.qaResult].count += 1;
+          map[d.qaResult].val += (d.totalPrice || 0);
+          totalAllCount += 1;
+        }
+      });
+      const sorted = Object.keys(map).map(k => ({name:k, ...map[k]})).sort((a,b)=>b.count-a.count);
+
+      const tbody = document.querySelector('#qaResultModalTable tbody');
+      tbody.innerHTML = '';
+      sorted.forEach(r => {
+        const percent = totalAllCount > 0 ? ((r.count / totalAllCount) * 100).toFixed(2) : 0;
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${r.name}</td>
+          <td style="text-align:right; color:#f59e0b;">${r.count}</td>
+          <td style="text-align:right;">${percent}%</td>
+          <td style="text-align:right; color:#38bdf8;">${formatCurrency(r.val)}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function drawGroupedBarChartValue(canvasId, labels, dataNeoca, dataProsp, axis, flatX = false) {
+      if (charts[canvasId]) charts[canvasId].destroy();
+      const ctx = document.getElementById(canvasId).getContext('2d');
+      charts[canvasId] = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [
+            { label: 'Neoca', data: dataNeoca, backgroundColor: '#38bdf8', borderRadius: 4 },
+            { label: 'Prosp', data: dataProsp, backgroundColor: '#10b981', borderRadius: 4 }
+          ]
+        },
+        options: {
+          indexAxis: axis,
+          responsive: true,
+          maintainAspectRatio: false,
+          layout: { padding: axis === 'y' ? { right: 70 } : { top: 30 } },
+          plugins: {
+            legend: { position: 'top', align: 'end', labels: { boxWidth: 12, font: { size: 11, color: '#94a3b8' } } },
+            datalabels: {
+              anchor: 'end',
+              align: axis === 'y' ? 'right' : 'top',
+              color: (context) => context.datasetIndex === 0 ? '#38bdf8' : '#10b981',
+              formatter: (value) => value > 0 ? formatCurrency(value) : '',
+              font: { size: 10 }
+            }
+          },
+          scales: {
+            x: { grid: { display: axis === 'y', color: '#334155' }, ticks: { maxRotation: flatX ? 0 : 45, minRotation: flatX ? 0 : 45, font: { size: 11 } } },
+            y: { grid: { display: axis === 'x', color: '#334155' }, ticks: { font: { size: 11 } } }
+          }
+        }
+      });
+    }
+
+    function drawBarChartValue(canvasId, labels, data, axis, color) {
+      if (charts[canvasId]) charts[canvasId].destroy();
+      const ctx = document.getElementById(canvasId).getContext('2d');
+      charts[canvasId] = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [{ data: data, backgroundColor: color, borderRadius: 4 }]
+        },
+        options: {
+          indexAxis: axis,
+          responsive: true,
+          maintainAspectRatio: false,
+          layout: { padding: axis === 'y' ? { right: 70 } : { top: 30 } },
+          plugins: {
+            legend: { display: false },
+            datalabels: {
+              anchor: 'end',
+              align: axis === 'y' ? 'right' : 'top',
+              color: color,
+              formatter: (value) => value > 0 ? formatCurrency(value) : '',
+              font: { size: 10 }
+            }
+          },
+          scales: {
+            x: { grid: { display: axis === 'y', color: '#334155' }, ticks: { maxRotation: 45, minRotation: 45, font: { size: 10 } } },
+            y: { grid: { display: axis === 'x', color: '#334155' }, ticks: { font: { size: 10 } } }
+          }
+        }
+      });
+    }
+
+    function drawBarChartPercent(canvasId, labels, data, totalOverall, axis, color) {
+      if (charts[canvasId]) charts[canvasId].destroy();
+      const ctx = document.getElementById(canvasId).getContext('2d');
+      charts[canvasId] = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [{ data: data, backgroundColor: color, borderRadius: 4 }]
+        },
+        options: {
+          indexAxis: axis,
+          responsive: true,
+          maintainAspectRatio: false,
+          layout: { padding: axis === 'y' ? { right: 50 } : { top: 25 } },
+          plugins: {
+            legend: { display: false },
+            datalabels: {
+              anchor: 'end',
+              align: axis === 'y' ? 'right' : 'top',
+              color: color,
+              formatter: (value) => value > 0 ? ((value / totalOverall) * 100).toFixed(1) + '%' : '',
+              font: { size: 10, weight: 'bold' }
+            }
+          },
+          scales: {
+            x: { grid: { display: axis === 'y', color: '#334155' }, ticks: { font: { size: 10 }, maxRotation: 45, minRotation: 45 } },
+            y: { grid: { display: axis === 'x', color: '#334155' }, ticks: { font: { size: 10 } } }
+          }
+        }
+      });
+    }
+
+    function drawPieChartPercent(canvasId, labels, data, total) {
+      if (charts[canvasId]) charts[canvasId].destroy();
+      const ctx = document.getElementById(canvasId).getContext('2d');
+      charts[canvasId] = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: labels,
+          datasets: [{
+            data: data,
+            backgroundColor: bgColors,
+            borderWidth: 0
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'right', labels: { boxWidth: 12, font: { size: 11 } } },
+            datalabels: {
+              color: '#ffffff',
+              formatter: (value) => total > 0 ? ((value / total) * 100).toFixed(1) + '%' : '0%',
+              font: { size: 12, weight: 'bold' }
+            }
+          }
+        }
+      });
+    }
+
+
+    // =============================================
+    // === SUPABASE INTEGRATION ====================
+    // =============================================
+
+    // Save credentials to localforage on connect
+    async function connectSupabase() {
+      const url = document.getElementById('sbUrl').value.trim();
+      const key = document.getElementById('sbKey').value.trim();
+      const statusEl = document.getElementById('supabaseStatus');
+      const msgEl = document.getElementById('sbMsg');
+
+      if (!url || !key) {
+        msgEl.textContent = '⚠️ กรุณากรอก URL และ Key ก่อนเชื่อมต่อ';
+        msgEl.style.color = '#f59e0b';
+        return;
+      }
+      try {
+        supabaseClient = supabase.createClient(url, key);
+        // Test connection
+        const { error } = await supabaseClient.from('returned_medicines').select('id').limit(1);
+        if (error && error.code !== 'PGRST116' && error.code !== '42P01') throw error;
+        statusEl.textContent = '✅ เชื่อมต่อแล้ว';
+        statusEl.className = 'supabase-status status-connected';
+        msgEl.textContent = '🎉 เชื่อมต่อ Supabase สำเร็จ! สามารถ Sync หรือโหลดข้อมูลได้';
+        msgEl.style.color = '#10b981';
+        document.getElementById('syncBtn').disabled = false;
+        document.getElementById('loadBtn').disabled = false;
+        localforage.setItem('sbUrl', url);
+        localforage.setItem('sbKey', key);
+      } catch (err) {
+        statusEl.textContent = '❌ เชื่อมต่อไม่สำเร็จ';
+        statusEl.className = 'supabase-status status-error';
+        msgEl.textContent = 'Error: ' + (err.message || JSON.stringify(err));
+        msgEl.style.color = '#ef4444';
+        supabaseClient = null;
+      }
+    }
+
+    async function syncToSupabase() {
+      if (!supabaseClient || allData.length === 0) return;
+      const btn = document.getElementById('syncBtn');
+      const msgEl = document.getElementById('sbMsg');
+      btn.disabled = true;
+      btn.textContent = '⏳ กำลัง Sync...';
+      msgEl.style.color = '#94a3b8';
+
+      try {
+        // Upsert in batches of 500
+        const BATCH = 500;
+        let uploaded = 0;
+        for (let i = 0; i < allData.length; i += BATCH) {
+          const batch = allData.slice(i, i + BATCH).map(d => ({
+            company: d.company,
+            month_str: d.monthStr,
+            bill_no: d.billNo,
+            bill_date: d.billDate,
+            customer_name: d.customerName,
+            item_code: d.itemCode,
+            product_name: d.productName,
+            lot: d.lot,
+            mfg_d: d.mfgD,
+            exp_d: d.expD,
+            qty: d.qty,
+            um: d.um,
+            total_price: d.totalPrice,
+            return_reason: d.returnReason,
+            qa_wh: d.qaWh,
+            qa_result: d.qaResult,
+            final_status: d.finalStatus
+          }));
+          const { error } = await supabaseClient.from('returned_medicines').upsert(batch, { onConflict: 'bill_no,lot,item_code' });
+          if (error) throw error;
+          uploaded += batch.length;
+          msgEl.textContent = `⏳ อัปโหลดแล้ว ${uploaded.toLocaleString()} / ${allData.length.toLocaleString()} รายการ...`;
+        }
+        msgEl.textContent = `✅ Sync สำเร็จ! อัปโหลดทั้งหมด ${allData.length.toLocaleString()} รายการ`;
+        msgEl.style.color = '#10b981';
+      } catch (err) {
+        msgEl.textContent = '❌ Sync ล้มเหลว: ' + (err.message || JSON.stringify(err));
+        msgEl.style.color = '#ef4444';
+      }
+      btn.disabled = false;
+      btn.textContent = '☁️ Sync ข้อมูล';
+    }
+
+    async function loadFromSupabase() {
+      if (!supabaseClient) return;
+      const btn = document.getElementById('loadBtn');
+      const msgEl = document.getElementById('sbMsg');
+      btn.disabled = true;
+      btn.textContent = '⏳ กำลังโหลด...';
+      try {
+        let all = [];
+        let from = 0;
+        const pageSize = 1000;
+        while (true) {
+          const { data, error } = await supabaseClient
+            .from('returned_medicines')
+            .select('*')
+            .range(from, from + pageSize - 1);
+          if (error) throw error;
+          if (!data || data.length === 0) break;
+          all = [...all, ...data];
+          if (data.length < pageSize) break;
+          from += pageSize;
+        }
+        // If Supabase is empty but we have local data, sync it up instead of wiping it
+        if (all.length === 0 && allData.length > 0) {
+          msgEl.textContent = '🔄 ไม่พบข้อมูลบน Supabase กำลังอัปโหลดข้อมูลที่มีอยู่ขึ้นไป...';
+          await syncToSupabase();
+          return;
+        }
+
+        // Map back to allData format
+        allData = all.map(r => ({
+          company: r.company || 'Unknown',
+          monthStr: r.month_str || 'Unknown',
+          returnMonthMs: 0,
+          billNo: r.bill_no || '',
+          billDate: r.bill_date || '',
+          parsedDate: null,
+          customerName: r.customer_name || '-',
+          itemCode: r.item_code || '',
+          productName: r.product_name || '-',
+          lot: r.lot || '',
+          mfgD: r.mfg_d || '',
+          expD: r.exp_d || '',
+          qty: r.qty || 0,
+          um: r.um || '',
+          totalPrice: parseFloat(r.total_price) || 0,
+          returnReason: r.return_reason || '-',
+          qaWh: r.qa_wh || '-',
+          qaResult: r.qa_result || '-',
+          finalStatus: r.final_status || 'ไม่ระบุ'
+        }));
+        localforage.setItem('returnedData', allData);
+        msgEl.textContent = `✅ โหลดสำเร็จ! ได้รับ ${allData.length.toLocaleString()} รายการจาก Supabase`;
+        msgEl.style.color = '#10b981';
+        updateView();
+      } catch (err) {
+        msgEl.textContent = '❌ โหลดล้มเหลว: ' + (err.message || JSON.stringify(err));
+        msgEl.style.color = '#ef4444';
+      }
+      btn.disabled = false;
+      btn.textContent = '📥 โหลดจาก Supabase';
+    }
+
+    // Auto-connect and load on startup
+    connectSupabase().then(() => {
+      if (supabaseClient) {
+        loadFromSupabase();
+      }
+    });
+
+  </script>
+</body>
+</html>
