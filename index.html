@@ -275,13 +275,7 @@
         <input type="date" id="endDate">
         <button id="clearDateBtn" style="padding:0.5rem 1rem; border-radius:6px; background:#475569; color:#fff; border:none; cursor:pointer;">ล้างวันที่</button>
       </div>
-      <div class="filter-group">
-        <label>ค้นหาผู้แทน:</label>
-        <div style="display: flex; gap: 0.5rem;">
-          <input type="text" id="salesRepSearch" placeholder="ระบุชื่อผู้แทน..." style="width: 170px; padding: 0.5rem; border-radius: 6px; background: #334155; color: #fff; border: 1px solid #475569; outline: none;">
-          <button id="salesRepSearchBtn" style="padding: 0.5rem 0.75rem; border-radius: 6px; background: #f43f5e; color: #fff; border: none; cursor: pointer; font-weight: bold;">🔍 ค้นหา</button>
-        </div>
-      </div>
+
       <div class="filter-group">
         <label>ค้นหาทั่วไป:</label>
         <input type="text" id="searchInput" placeholder="ค้นหาบิล, ชื่อลูกค้า, ยา, Lot, สาเหตุ..." style="width: 250px; padding: 0.5rem; border-radius: 6px; background: #334155; color: #fff; border: 1px solid #475569; outline: none;">
@@ -435,7 +429,13 @@
 
     <!-- Full Data Table at the bottom -->
     <div class="glass" style="padding: 1.5rem; display: flex; flex-direction: column;">
-      <h3 style="margin: 0 0 1rem 0;">ข้อมูลรายละเอียดรายการทั้งหมด (สอบกลับ)</h3>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 1rem;">
+        <h3 style="margin: 0;">ข้อมูลรายละเอียดรายการทั้งหมด (สอบกลับ)</h3>
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+          <label style="color: #94a3b8; font-weight: bold;">🔍 กรองเฉพาะผู้แทน:</label>
+          <input type="text" id="tableSalesRepSearch" placeholder="ระบุชื่อผู้แทน..." style="width: 200px; padding: 0.5rem; border-radius: 6px; background: #334155; color: #fff; border: 1px solid #475569; outline: none;">
+        </div>
+      </div>
       <div style="overflow-x: auto; flex: 1; max-height: 500px;">
         <table id="dataTable">
           <thead>
@@ -598,48 +598,7 @@
     </div>
   </div>
 
-  <!-- Sales Rep Detail Modal (Search Results) -->
-  <div id="salesRepDetailModal" class="modal-overlay" onclick="handleOverlayClick(event, 'salesRepDetailModal')">
-    <div class="modal-content" style="max-width: 960px;">
-      <div class="modal-header">
-        <h3 style="margin:0;">🔍 ข้อมูลรายการคืนยาของผู้แทน: <span id="srdName" style="color: #f43f5e;"></span></h3>
-        <button class="close-btn" onclick="closeModal('salesRepDetailModal')">&times;</button>
-      </div>
-      <div class="modal-body">
-        <div style="display: flex; gap: 2rem; margin-bottom: 1.5rem; padding: 1rem; background: rgba(30,41,59,0.5); border-radius: 8px; border: 1px solid #334155;">
-          <div>
-            <div style="font-size: 0.8rem; color: #94a3b8;">มูลค่าคืนรวมของผู้แทนนี้</div>
-            <div style="font-size: 1.5rem; font-weight: bold; color: #f43f5e;" id="srdTotal">฿0</div>
-          </div>
-          <div>
-            <div style="font-size: 0.8rem; color: #94a3b8;">สัดส่วนเทียบกับทั้งหมด (%)</div>
-            <div style="font-size: 1.5rem; font-weight: bold; color: #38bdf8;" id="srdPercent">0%</div>
-          </div>
-          <div>
-            <div style="font-size: 0.8rem; color: #94a3b8;">จำนวนรายการที่คืน</div>
-            <div style="font-size: 1.5rem; font-weight: bold; color: #f59e0b;" id="srdCount">0 รายการ</div>
-          </div>
-        </div>
-        <div style="overflow-x: auto; max-height: 400px;">
-          <table id="salesRepDetailModalTable">
-            <thead>
-              <tr>
-                <th style="position: sticky; top: -24px;">วันที่ออกบิล</th>
-                <th style="position: sticky; top: -24px;">บิลเลขที่</th>
-                <th style="position: sticky; top: -24px;">ชื่อลูกค้า</th>
-                <th style="position: sticky; top: -24px;">Item</th>
-                <th style="position: sticky; top: -24px;">Product</th>
-                <th style="position: sticky; top: -24px;">Lot</th>
-                <th style="position: sticky; top: -24px; text-align:right;">มูลค่า (บาท)</th>
-                <th style="position: sticky; top: -24px;">สาเหตุ</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  </div>
+
 
   <!-- Customer Detail Tooltip -->
   <div id="customerTooltip" class="customer-tooltip" style="display:none; opacity:0;"></div>
@@ -655,6 +614,23 @@
     let supabaseClient = null;
     let customerChartData = []; // store for tooltip use
     let salesRepChartData = []; // store for sales rep tooltip use
+
+    // --- Utilities ---
+    const formatCurrency = (val) => new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB' }).format(val);
+
+    function showToast(msg, type='error') {
+      let toast = document.getElementById('customToast');
+      if(!toast) {
+        toast = document.createElement('div');
+        toast.id = 'customToast';
+        toast.style.cssText = 'position:fixed; bottom:20px; right:20px; padding:1rem 1.5rem; border-radius:8px; color:#fff; z-index:9999; transition:opacity 0.3s; font-weight:bold; box-shadow:0 10px 25px rgba(0,0,0,0.5); opacity:0; pointer-events:none;';
+        document.body.appendChild(toast);
+      }
+      toast.style.background = type === 'error' ? '#ef4444' : '#10b981';
+      toast.innerText = msg;
+      toast.style.opacity = '1';
+      setTimeout(() => toast.style.opacity = '0', 4000);
+    }
 
     // --- Chart Global Defaults ---
     Chart.register(ChartDataLabels);
@@ -677,8 +653,7 @@
     const endDate = document.getElementById('endDate');
     const clearDateBtn = document.getElementById('clearDateBtn');
     const searchInput = document.getElementById('searchInput');
-    const salesRepSearch = document.getElementById('salesRepSearch');
-    const salesRepSearchBtn = document.getElementById('salesRepSearchBtn');
+    const tableSalesRepSearch = document.getElementById('tableSalesRepSearch');
 
     // Load persisted data from localforage FIRST (highest priority)
     localforage.getItem('returnedData').then(async data => {
@@ -720,86 +695,8 @@
     [filterCompany, filterMonth, startDate, endDate].forEach(el => {
       el.addEventListener('change', renderDashboard);
     });
-    searchInput.addEventListener('input', renderDashboard);
+    tableSalesRepSearch.addEventListener('input', renderDashboard);
 
-    salesRepSearch.addEventListener('keydown', function(e) {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        const val = this.value.trim();
-        if (val) {
-          openSalesRepDetail(val);
-        }
-      }
-    });
-
-    salesRepSearchBtn.addEventListener('click', function() {
-      const val = salesRepSearch.value.trim();
-      if (val) {
-        openSalesRepDetail(val);
-      }
-    });
-
-    function openSalesRepDetail(searchName) {
-      const lowerSearch = searchName.toLowerCase().trim();
-      
-      // Debug: check data availability
-      console.log('=== Search Debug ===');
-      console.log('Search term:', lowerSearch);
-      console.log('allData length:', allData.length);
-      console.log('currentFilteredData length:', currentFilteredData.length);
-      
-      // Sample salesRep values from allData
-      const sampleReps = [...new Set(allData.map(d => d.salesRep))].slice(0, 10);
-      console.log('Sample salesRep values:', sampleReps);
-      
-      // Search in allData (not just currentFilteredData) for broader match
-      const repData = allData.filter(d => {
-        const rep = (d.salesRep || '').toLowerCase().trim();
-        return rep && rep !== '-' && rep.includes(lowerSearch);
-      });
-      
-      console.log('Matched records:', repData.length);
-      
-      if (repData.length === 0) {
-        // Show helpful debug info
-        const availableReps = [...new Set(allData.map(d => d.salesRep).filter(r => r && r !== '-'))].slice(0, 5).join(', ');
-        alert('ไม่พบผู้แทน: "' + searchName + '"\n\nผู้แทนที่มีในระบบ (ตัวอย่าง):\n' + (availableReps || '(ไม่มีข้อมูลผู้แทน - กรุณาโยน CSV ใหม่)'));
-        return;
-      }
-      
-      // Calculate totals against all data
-      const totalAllVal = allData.reduce((sum, d) => sum + (d.totalPrice || 0), 0);
-      const repTotalVal = repData.reduce((sum, d) => sum + (d.totalPrice || 0), 0);
-      const pct = totalAllVal > 0 ? ((repTotalVal / totalAllVal) * 100).toFixed(2) : 0;
-      
-      // Use the actual name from the first matched record
-      const actualName = repData[0].salesRep;
-      
-      document.getElementById('srdName').innerText = actualName;
-      document.getElementById('srdTotal').innerText = formatCurrency(repTotalVal);
-      document.getElementById('srdPercent').innerText = pct + '%';
-      document.getElementById('srdCount').innerText = repData.length.toLocaleString() + ' รายการ';
-      
-      const tbody = document.querySelector('#salesRepDetailModalTable tbody');
-      tbody.innerHTML = '';
-      repData.sort((a,b) => (b.totalPrice || 0) - (a.totalPrice || 0)).forEach(r => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>${r.billDate}</td>
-          <td>${r.billNo}</td>
-          <td title="${r.customerName}">${r.customerName}</td>
-          <td>${r.itemCode}</td>
-          <td title="${r.productName}">${r.productName}</td>
-          <td>${r.lot}</td>
-          <td style="text-align:right; color:#38bdf8;">${formatCurrency(r.totalPrice)}</td>
-          <td title="${r.returnReason}">${r.returnReason}</td>
-        `;
-        tbody.appendChild(tr);
-      });
-      
-      document.getElementById('salesRepDetailModal').style.display = 'flex';
-    }
-    
     clearDateBtn.addEventListener('click', () => {
       startDate.value = '';
       endDate.value = '';
@@ -966,8 +863,6 @@
       if(items.includes(currentVal)) selectEl.value = currentVal;
     }
 
-    const formatCurrency = (val) => new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB' }).format(val);
-
     function getBadgeClass(status) {
       if (status.includes('✅')) return 'badge bg-green';
       if (status.includes('🗑️')) return 'badge bg-red';
@@ -989,9 +884,15 @@
 
         const searchVal = (searchInput.value || '').toLowerCase();
         if (searchVal) {
-          const searchFields = [d.billNo, d.billDate, d.customerName, d.itemCode, d.productName, d.lot, d.mfgD, d.expD, d.um, d.returnReason, d.qaWh, d.qaResult];
+          const searchFields = [d.billNo, d.billDate, d.customerName, d.itemCode, d.productName, d.lot, d.mfgD, d.expD, d.um, d.returnReason, d.qaWh, d.qaResult, d.salesRep];
           const match = searchFields.some(val => (val || '').toString().toLowerCase().includes(searchVal));
           if (!match) return false;
+        }
+
+        const repSearchVal = (tableSalesRepSearch.value || '').toLowerCase();
+        if (repSearchVal) {
+          const rep = (d.salesRep || '').toLowerCase();
+          if (!rep.includes(repSearchVal)) return false;
         }
         
         return true;
