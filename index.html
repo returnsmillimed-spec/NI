@@ -760,9 +760,10 @@
             const match = file.name.match(monthRegex);
             if (match) {
                const mIndex = thMonths.indexOf(match[1]);
-               const yearTH = match[2];
-               extractedMonthStr = `${enMonths[mIndex]} ${yearTH}`;
-               const yearAD = parseInt(yearTH, 10) - 543;
+               const yearRaw = parseInt(match[2], 10);
+               const yearBE = yearRaw < 2500 ? yearRaw + 543 : yearRaw; // Normalize to BE (25xx)
+               const yearAD = yearRaw > 2500 ? yearRaw - 543 : yearRaw; // Normalize to AD (20xx)
+               extractedMonthStr = `${enMonths[mIndex]} ${yearBE}`;
                returnMonthMs = new Date(yearAD, mIndex, 1).getTime();
             }
 
@@ -1675,28 +1676,39 @@
         }
 
         // Map back to allData format
-        allData = all.map(r => ({
-          company: r.company || 'Unknown',
-          monthStr: r.month_str || 'Unknown',
-          returnMonthMs: 0,
-          billNo: r.bill_no || '',
-          billDate: r.bill_date || '',
-          parsedDate: null,
-          customerName: r.customer_name || '-',
-          salesRep: r.sales_rep || '-',
-          itemCode: r.item_code || '',
-          productName: r.product_name || '-',
-          lot: r.lot || '',
-          mfgD: r.mfg_d || '',
-          expD: r.exp_d || '',
-          qty: r.qty || 0,
-          um: r.um || '',
-          totalPrice: parseFloat(r.total_price) || 0,
-          returnReason: r.return_reason || '-',
-          qaWh: r.qa_wh || '-',
-          qaResult: r.qa_result || '-',
-          finalStatus: r.final_status || 'ไม่ระบุ'
-        }));
+        allData = all.map(r => {
+          let mStr = r.month_str || 'Unknown';
+          if (mStr !== 'Unknown') {
+             const parts = mStr.split(' ');
+             if (parts.length === 2) {
+                const y = parseInt(parts[1], 10);
+                if (y < 2500) mStr = `${parts[0]} ${y + 543}`;
+             }
+          }
+          
+          return {
+            company: r.company || 'Unknown',
+            monthStr: mStr,
+            returnMonthMs: 0,
+            billNo: r.bill_no || '',
+            billDate: r.bill_date || '',
+            parsedDate: null,
+            customerName: r.customer_name || '-',
+            salesRep: r.sales_rep || '-',
+            itemCode: r.item_code || '',
+            productName: r.product_name || '-',
+            lot: r.lot || '',
+            mfgD: r.mfg_d || '',
+            expD: r.exp_d || '',
+            qty: r.qty || 0,
+            um: r.um || '',
+            totalPrice: parseFloat(r.total_price) || 0,
+            returnReason: r.return_reason || '-',
+            qaWh: r.qa_wh || '-',
+            qaResult: r.qa_result || '-',
+            finalStatus: r.final_status || 'ไม่ระบุ'
+          };
+        });
         localforage.setItem('returnedData', allData);
         msgEl.textContent = `✅ โหลดสำเร็จ! ได้รับ ${allData.length.toLocaleString()} รายการจาก Supabase`;
         msgEl.style.color = '#10b981';
