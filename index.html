@@ -276,8 +276,15 @@
         <button id="clearDateBtn" style="padding:0.5rem 1rem; border-radius:6px; background:#475569; color:#fff; border:none; cursor:pointer;">ล้างวันที่</button>
       </div>
       <div class="filter-group">
-        <label>ค้นหา:</label>
-        <input type="text" id="searchInput" placeholder="ค้นหาบิล, ชื่อลูกค้า, ยา, Lot, สาเหตุ..." style="width: 280px; padding: 0.5rem; border-radius: 6px; background: #334155; color: #fff; border: 1px solid #475569; outline: none;">
+        <label>ค้นหาผู้แทน:</label>
+        <div style="display: flex; gap: 0.5rem;">
+          <input type="text" id="salesRepSearch" placeholder="ระบุชื่อผู้แทน..." style="width: 170px; padding: 0.5rem; border-radius: 6px; background: #334155; color: #fff; border: 1px solid #475569; outline: none;">
+          <button id="salesRepSearchBtn" style="padding: 0.5rem 0.75rem; border-radius: 6px; background: #f43f5e; color: #fff; border: none; cursor: pointer; font-weight: bold;">🔍 ค้นหา</button>
+        </div>
+      </div>
+      <div class="filter-group">
+        <label>ค้นหาทั่วไป:</label>
+        <input type="text" id="searchInput" placeholder="ค้นหาบิล, ชื่อลูกค้า, ยา, Lot, สาเหตุ..." style="width: 250px; padding: 0.5rem; border-radius: 6px; background: #334155; color: #fff; border: 1px solid #475569; outline: none;">
       </div>
     </div>
 
@@ -323,17 +330,34 @@
       <div class="chart-container"><canvas id="monthlyChart"></canvas></div>
     </div>
 
-    <!-- Customer Top 10 Chart -->
-    <div class="glass clickable-chart" style="padding: 1.5rem; margin-bottom: 1.5rem;" id="customerChartWrapper" onclick="openModal('customerModal')">
-      <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-        <div>
-          <h3 style="margin: 0 0 0.5rem 0;">🏆 10 อันดับลูกค้าที่คืนยามูลค่าสูงสุด</h3>
-          <p style="margin: 0 0 0.5rem 0; font-size: 0.8rem; color: #94a3b8;">คลิกที่แถบเพื่อดูรายละเอียด หรือคลิกที่กราฟเพื่อดูทั้งหมด</p>
+    <!-- Customer and Sales Rep Charts Row -->
+    <div class="grid-2">
+      <!-- Customer Top 10 Chart -->
+      <div class="glass clickable-chart" style="padding: 1.5rem; margin-bottom: 1.5rem;" id="customerChartWrapper" onclick="openModal('customerModal')">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+          <div>
+            <h3 style="margin: 0 0 0.5rem 0;">🏆 10 อันดับลูกค้าที่คืนยามูลค่าสูงสุด</h3>
+            <p style="margin: 0 0 0.5rem 0; font-size: 0.8rem; color: #94a3b8;">คลิกที่แถบเพื่อดูรายละเอียด</p>
+          </div>
+          <span style="color: #8b5cf6; font-size: 0.8rem; background: rgba(139,92,246,0.1); padding: 0.2rem 0.5rem; border-radius: 4px;">คลิกดูทั้งหมด</span>
         </div>
-        <span style="color: #8b5cf6; font-size: 0.8rem; background: rgba(139,92,246,0.1); padding: 0.2rem 0.5rem; border-radius: 4px;">คลิกดูทั้งหมด</span>
+        <div class="chart-container" style="height: 420px;">
+          <canvas id="customerChart"></canvas>
+        </div>
       </div>
-      <div class="chart-container" style="height: 420px;">
-        <canvas id="customerChart"></canvas>
+
+      <!-- Sales Rep Top 10 Chart -->
+      <div class="glass clickable-chart" style="padding: 1.5rem; margin-bottom: 1.5rem;" id="salesRepChartWrapper" onclick="openModal('salesRepModal')">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+          <div>
+            <h3 style="margin: 0 0 0.5rem 0;">💼 10 อันดับผู้แทนที่มียาคืนมูลค่าสูงสุด</h3>
+            <p style="margin: 0 0 0.5rem 0; font-size: 0.8rem; color: #94a3b8;">คลิกที่แถบเพื่อดูรายละเอียด</p>
+          </div>
+          <span style="color: #f43f5e; font-size: 0.8rem; background: rgba(244,63,94,0.1); padding: 0.2rem 0.5rem; border-radius: 4px;">คลิกดูทั้งหมด</span>
+        </div>
+        <div class="chart-container" style="height: 420px;">
+          <canvas id="salesRepChart"></canvas>
+        </div>
       </div>
     </div>
 
@@ -419,6 +443,7 @@
               <th>บิลเลขที่</th>
               <th>วันที่ออกบิล</th>
               <th>ชื่อลูกค้า</th>
+              <th>ชื่อผู้แทน</th>
               <th>Item Code</th>
               <th>Product Name</th>
               <th>Lot NO</th>
@@ -550,8 +575,76 @@
     </div>
   </div>
 
+  <!-- Sales Rep Modal -->
+  <div id="salesRepModal" class="modal-overlay" onclick="handleOverlayClick(event, 'salesRepModal')">
+    <div class="modal-content" style="max-width: 860px;">
+      <div class="modal-header">
+        <h3 style="margin:0;">💼 รายชื่อผู้แทนที่มียาคืน (เรียงตามมูลค่า)</h3>
+        <button class="close-btn" onclick="closeModal('salesRepModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <table id="salesRepModalTable">
+          <thead>
+            <tr>
+              <th style="position: sticky; top: -24px;">#</th>
+              <th style="position: sticky; top: -24px;">ชื่อผู้แทน</th>
+              <th style="text-align:right; position: sticky; top: -24px;">จำนวนรายการ</th>
+              <th style="text-align:right; position: sticky; top: -24px;">มูลค่าคืนรวม (บาท)</th>
+              <th style="text-align:right; position: sticky; top: -24px;">สัดส่วน (%)</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+    </div>
+  </div>
+
+  <!-- Sales Rep Detail Modal (Search Results) -->
+  <div id="salesRepDetailModal" class="modal-overlay" onclick="handleOverlayClick(event, 'salesRepDetailModal')">
+    <div class="modal-content" style="max-width: 960px;">
+      <div class="modal-header">
+        <h3 style="margin:0;">🔍 ข้อมูลรายการคืนยาของผู้แทน: <span id="srdName" style="color: #f43f5e;"></span></h3>
+        <button class="close-btn" onclick="closeModal('salesRepDetailModal')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div style="display: flex; gap: 2rem; margin-bottom: 1.5rem; padding: 1rem; background: rgba(30,41,59,0.5); border-radius: 8px; border: 1px solid #334155;">
+          <div>
+            <div style="font-size: 0.8rem; color: #94a3b8;">มูลค่าคืนรวมของผู้แทนนี้</div>
+            <div style="font-size: 1.5rem; font-weight: bold; color: #f43f5e;" id="srdTotal">฿0</div>
+          </div>
+          <div>
+            <div style="font-size: 0.8rem; color: #94a3b8;">สัดส่วนเทียบกับทั้งหมด (%)</div>
+            <div style="font-size: 1.5rem; font-weight: bold; color: #38bdf8;" id="srdPercent">0%</div>
+          </div>
+          <div>
+            <div style="font-size: 0.8rem; color: #94a3b8;">จำนวนรายการที่คืน</div>
+            <div style="font-size: 1.5rem; font-weight: bold; color: #f59e0b;" id="srdCount">0 รายการ</div>
+          </div>
+        </div>
+        <div style="overflow-x: auto; max-height: 400px;">
+          <table id="salesRepDetailModalTable">
+            <thead>
+              <tr>
+                <th style="position: sticky; top: -24px;">วันที่ออกบิล</th>
+                <th style="position: sticky; top: -24px;">บิลเลขที่</th>
+                <th style="position: sticky; top: -24px;">ชื่อลูกค้า</th>
+                <th style="position: sticky; top: -24px;">Item</th>
+                <th style="position: sticky; top: -24px;">Product</th>
+                <th style="position: sticky; top: -24px;">Lot</th>
+                <th style="position: sticky; top: -24px; text-align:right;">มูลค่า (บาท)</th>
+                <th style="position: sticky; top: -24px;">สาเหตุ</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Customer Detail Tooltip -->
   <div id="customerTooltip" class="customer-tooltip" style="display:none; opacity:0;"></div>
+  <!-- Sales Rep Detail Tooltip -->
+  <div id="salesRepTooltip" class="customer-tooltip" style="display:none; opacity:0; border-left-color: #f43f5e;"></div>
 
   <script>
     // --- Global State ---
@@ -561,6 +654,7 @@
     let activeChartFilter = { barChart: 'Neoca', reasonChart: 'Neoca' };
     let supabaseClient = null;
     let customerChartData = []; // store for tooltip use
+    let salesRepChartData = []; // store for sales rep tooltip use
 
     // --- Chart Global Defaults ---
     Chart.register(ChartDataLabels);
@@ -583,6 +677,8 @@
     const endDate = document.getElementById('endDate');
     const clearDateBtn = document.getElementById('clearDateBtn');
     const searchInput = document.getElementById('searchInput');
+    const salesRepSearch = document.getElementById('salesRepSearch');
+    const salesRepSearchBtn = document.getElementById('salesRepSearchBtn');
 
     // Load persisted data
     localforage.getItem('returnedData').then(data => {
@@ -616,6 +712,84 @@
       el.addEventListener('change', renderDashboard);
     });
     searchInput.addEventListener('input', renderDashboard);
+
+    salesRepSearch.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const val = this.value.trim();
+        if (val) {
+          openSalesRepDetail(val);
+        }
+      }
+    });
+
+    salesRepSearchBtn.addEventListener('click', function() {
+      const val = salesRepSearch.value.trim();
+      if (val) {
+        openSalesRepDetail(val);
+      }
+    });
+
+    function openSalesRepDetail(searchName) {
+      const lowerSearch = searchName.toLowerCase().trim();
+      
+      // Debug: check data availability
+      console.log('=== Search Debug ===');
+      console.log('Search term:', lowerSearch);
+      console.log('allData length:', allData.length);
+      console.log('currentFilteredData length:', currentFilteredData.length);
+      
+      // Sample salesRep values from allData
+      const sampleReps = [...new Set(allData.map(d => d.salesRep))].slice(0, 10);
+      console.log('Sample salesRep values:', sampleReps);
+      
+      // Search in allData (not just currentFilteredData) for broader match
+      const repData = allData.filter(d => {
+        const rep = (d.salesRep || '').toLowerCase().trim();
+        return rep && rep !== '-' && rep.includes(lowerSearch);
+      });
+      
+      console.log('Matched records:', repData.length);
+      
+      if (repData.length === 0) {
+        // Show helpful debug info
+        const availableReps = [...new Set(allData.map(d => d.salesRep).filter(r => r && r !== '-'))].slice(0, 5).join(', ');
+        alert('ไม่พบผู้แทน: "' + searchName + '"\n\nผู้แทนที่มีในระบบ (ตัวอย่าง):\n' + (availableReps || '(ไม่มีข้อมูลผู้แทน - กรุณาโยน CSV ใหม่)'));
+        return;
+      }
+      
+      // Calculate totals against all data
+      const totalAllVal = allData.reduce((sum, d) => sum + (d.totalPrice || 0), 0);
+      const repTotalVal = repData.reduce((sum, d) => sum + (d.totalPrice || 0), 0);
+      const pct = totalAllVal > 0 ? ((repTotalVal / totalAllVal) * 100).toFixed(2) : 0;
+      
+      // Use the actual name from the first matched record
+      const actualName = repData[0].salesRep;
+      
+      document.getElementById('srdName').innerText = actualName;
+      document.getElementById('srdTotal').innerText = formatCurrency(repTotalVal);
+      document.getElementById('srdPercent').innerText = pct + '%';
+      document.getElementById('srdCount').innerText = repData.length.toLocaleString() + ' รายการ';
+      
+      const tbody = document.querySelector('#salesRepDetailModalTable tbody');
+      tbody.innerHTML = '';
+      repData.sort((a,b) => (b.totalPrice || 0) - (a.totalPrice || 0)).forEach(r => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${r.billDate}</td>
+          <td>${r.billNo}</td>
+          <td title="${r.customerName}">${r.customerName}</td>
+          <td>${r.itemCode}</td>
+          <td title="${r.productName}">${r.productName}</td>
+          <td>${r.lot}</td>
+          <td style="text-align:right; color:#38bdf8;">${formatCurrency(r.totalPrice)}</td>
+          <td title="${r.returnReason}">${r.returnReason}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+      
+      document.getElementById('salesRepDetailModal').style.display = 'flex';
+    }
     
     clearDateBtn.addEventListener('click', () => {
       startDate.value = '';
@@ -631,6 +805,8 @@
       if (id === 'qaWhModal') renderQaWhModal();
       if (id === 'qaResultModal') renderQaResultModal();
       if (id === 'customerModal') renderCustomerModal();
+      if (id === 'salesRepModal') renderSalesRepModal();
+      if (id === 'salesRepDetailModal') {} // Data populated via openSalesRepDetail
     }
     function closeModal(id) { document.getElementById(id).style.display = 'none'; }
     function handleOverlayClick(e, id) {
@@ -722,7 +898,7 @@
                 company,
                 monthStr: extractedMonthStr,
                 returnMonthMs,
-                qty: parseInt(row['จำนวน'] || 0, 10),
+                qty: parseInt(String(row['จำนวน'] || '0').trim(), 10) || 0,
                 totalPrice: parseFloat(cleanPrice || 0),
                 billDate,
                 parsedDate,
@@ -735,6 +911,7 @@
                 qaResult,
                 returnReason: (row['สาเหตุการคืน'] || '-').trim(),
                 customerName: (row['ชื่อลูกค้า'] || '-').trim(),
+                salesRep: (row['รายชื่อผู้แทน'] || '-').trim(),
                 productName: (row['Product Name'] || '-').trim(),
                 qaWh,
                 finalStatus
@@ -852,6 +1029,7 @@
           <td>${row.billNo}</td>
           <td>${row.billDate}</td>
           <td title="${row.customerName}">${row.customerName}</td>
+          <td title="${row.salesRep}" style="color: #f43f5e;">${row.salesRep}</td>
           <td>${row.itemCode}</td>
           <td title="${row.productName}">${row.productName}</td>
           <td>${row.lot}</td>
@@ -958,6 +1136,23 @@
         .slice(0, 10);
       customerChartData = sortedCusts;
       drawCustomerChart('customerChart', sortedCusts, totalCustValue);
+
+      // Top 10 Sales Reps Chart
+      const repMap = {};
+      const repCountMap = {};
+      filtered.forEach(d => {
+        if (d.salesRep && d.salesRep !== '-') {
+          repMap[d.salesRep] = (repMap[d.salesRep] || 0) + (d.totalPrice || 0);
+          repCountMap[d.salesRep] = (repCountMap[d.salesRep] || 0) + 1;
+        }
+      });
+      const totalRepValue = Object.values(repMap).reduce((s,v) => s+v, 0) || 1;
+      const sortedReps = Object.keys(repMap)
+        .map(k => ({ name: k, val: repMap[k], count: repCountMap[k] }))
+        .sort((a,b) => b.val - a.val)
+        .slice(0, 10);
+      salesRepChartData = sortedReps;
+      drawSalesRepChart('salesRepChart', sortedReps, totalRepValue);
 
       // Update Top Reason Card Breakdowns
       const topOverallReasonArr = Object.keys(overallReasonMap).sort((a,b) => overallReasonMap[b] - overallReasonMap[a]);
@@ -1170,7 +1365,128 @@
       }, { passive: true });
     }
 
-    function renderQaResultModal() {
+  function renderSalesRepModal() {
+    const repMap = {};
+    const repCountMap = {};
+    let totalVal = 0;
+    currentFilteredData.forEach(d => {
+      if (d.salesRep && d.salesRep !== '-') {
+        repMap[d.salesRep] = (repMap[d.salesRep] || 0) + (d.totalPrice || 0);
+        repCountMap[d.salesRep] = (repCountMap[d.salesRep] || 0) + 1;
+        totalVal += (d.totalPrice || 0);
+      }
+    });
+    const sorted = Object.keys(repMap)
+      .map(k => ({ name: k, val: repMap[k], count: repCountMap[k] }))
+      .sort((a,b) => b.val - a.val);
+
+    const tbody = document.querySelector('#salesRepModalTable tbody');
+    tbody.innerHTML = '';
+    sorted.forEach((c, i) => {
+      const pct = totalVal > 0 ? ((c.val / totalVal) * 100).toFixed(2) : 0;
+      const tr = document.createElement('tr');
+      const rankColor = i === 0 ? '#f59e0b' : i === 1 ? '#94a3b8' : i === 2 ? '#cd7c2f' : '#64748b';
+      const rankIcon = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i+1}`;
+      tr.innerHTML = `
+        <td style="color:${rankColor}; font-weight:bold;">${rankIcon}</td>
+        <td title="${c.name}">${c.name}</td>
+        <td style="text-align:right; color:#f59e0b;">${c.count.toLocaleString()}</td>
+        <td style="text-align:right; color:#f43f5e; font-weight:bold;">${formatCurrency(c.val)}</td>
+        <td style="text-align:right;"><span style="background:rgba(244,63,94,0.15);color:#f43f5e;padding:0.2rem 0.5rem;border-radius:4px;">${pct}%</span></td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  // --- Sales Rep Chart with hover popup ---
+  function drawSalesRepChart(canvasId, data, totalValue) {
+    if (charts[canvasId]) charts[canvasId].destroy();
+    const ctx = document.getElementById(canvasId).getContext('2d');
+    const tooltip = document.getElementById('salesRepTooltip');
+
+    const roseGrad = bgColors.map((_, i) => {
+      const alpha = 1 - (i * 0.06);
+      return `rgba(244,63,94,${Math.max(alpha, 0.4)})`;
+    });
+
+    charts[canvasId] = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: data.map(d => d.name.length > 28 ? d.name.slice(0,28)+'…' : d.name),
+        datasets: [{
+          data: data.map(d => d.val),
+          backgroundColor: roseGrad.slice(0, data.length),
+          borderRadius: 6,
+          borderSkipped: false
+        }]
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        layout: { padding: { right: 100 } },
+        onHover: (event, elements) => {
+          if (elements.length > 0) {
+            const idx = elements[0].index;
+            const d = data[idx];
+            const pct = totalValue > 0 ? ((d.val / totalValue) * 100).toFixed(2) : 0;
+            const rankIcon = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `อันดับ ${idx+1}`;
+            tooltip.innerHTML = `
+              <div class="tooltip-rank">${rankIcon}</div>
+              <div class="tooltip-name">${d.name}</div>
+              <div class="tooltip-value" style="color: #f43f5e;">${formatCurrency(d.val)}</div>
+              <div class="tooltip-pct">🎯 สัดส่วน: ${pct}% ของมูลค่ารวม</div>
+              <div class="tooltip-items">📋 จำนวนรายการ: ${d.count.toLocaleString()} รายการ</div>
+            `;
+            const rect = document.getElementById(canvasId).getBoundingClientRect();
+            let tx = event.native.clientX + 20;
+            let ty = event.native.clientY - 20;
+            if (tx + 250 > window.innerWidth) tx = event.native.clientX - 270;
+            tooltip.style.left = tx + 'px';
+            tooltip.style.top = ty + 'px';
+            tooltip.style.display = 'block';
+            tooltip.style.opacity = '1';
+            document.getElementById(canvasId).style.cursor = 'pointer';
+          } else {
+            tooltip.style.opacity = '0';
+            setTimeout(() => { if (tooltip.style.opacity === '0') tooltip.style.display = 'none'; }, 150);
+            document.getElementById(canvasId).style.cursor = 'default';
+          }
+        },
+        onClick: (event, elements) => {
+          if (elements.length > 0) {
+            event.native.stopPropagation();
+            openModal('salesRepModal');
+          }
+        },
+        plugins: {
+          legend: { display: false },
+          datalabels: {
+            anchor: 'end',
+            align: 'right',
+            color: '#f43f5e',
+            formatter: (value) => {
+              const pct = totalValue > 0 ? ((value/totalValue)*100).toFixed(1) : 0;
+              return value > 0 ? `${formatCurrency(value)}  (${pct}%)` : '';
+            },
+            font: { size: 10, weight: 'bold' }
+          }
+        },
+        scales: {
+          x: { grid: { color: '#334155' }, ticks: { font: { size: 10 } } },
+          y: { grid: { display: false }, ticks: { font: { size: 11 }, color: '#cbd5e1' } }
+        }
+      }
+    });
+
+    // Hide tooltip when mouse leaves canvas
+    document.getElementById(canvasId).addEventListener('mouseleave', () => {
+      tooltip.style.opacity = '0';
+      setTimeout(() => { tooltip.style.display = 'none'; }, 150);
+    }, { passive: true });
+  }
+
+  function renderQaResultModal() {
       const map = {};
       let totalAllCount = 0;
       currentFilteredData.forEach(d => {
@@ -1391,6 +1707,7 @@
             bill_no: d.billNo,
             bill_date: d.billDate,
             customer_name: d.customerName,
+            sales_rep: d.salesRep,
             item_code: d.itemCode,
             product_name: d.productName,
             lot: d.lot,
@@ -1456,6 +1773,7 @@
           billDate: r.bill_date || '',
           parsedDate: null,
           customerName: r.customer_name || '-',
+          salesRep: r.sales_rep || '-',
           itemCode: r.item_code || '',
           productName: r.product_name || '-',
           lot: r.lot || '',
