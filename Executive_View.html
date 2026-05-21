@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Executive Summary — ยาคืน</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #1e3a5f;
+      --accent: #2563eb;
+      --danger: #dc2626;
+      --success: #16a34a;
+      --warning: #d97706;
+      --neutral: #475569;
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --border: #e2e8f0;
+      --text: #0f172a;
+      --text-sub: #64748b;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Sarabun', 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 14px;
+      padding: 2rem;
+    }
+
+    /* ======= HEADER ======= */
+    .report-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 2rem;
+      padding-bottom: 1.25rem;
+      border-bottom: 3px solid var(--primary);
+    }
+    .report-title h1 {
+      font-size: 1.7rem;
+      font-weight: 800;
+      color: var(--primary);
+      letter-spacing: -0.5px;
+    }
+    .report-title p {
+      color: var(--text-sub);
+      font-size: 0.9rem;
+      margin-top: 0.25rem;
+    }
+    .report-meta {
+      text-align: right;
+      font-size: 0.82rem;
+      color: var(--text-sub);
+      line-height: 1.7;
+    }
+    .report-meta strong { color: var(--primary); font-size: 0.9rem; }
+
+    .print-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      padding: 0.6rem 1.4rem;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-family: inherit;
+      font-weight: 600;
+      cursor: pointer;
+      margin-bottom: 1.5rem;
+      transition: background 0.2s;
+    }
+    .print-btn:hover { background: #1e40af; }
+
+    /* ======= LOADING ======= */
+    #loadingState {
+      text-align: center;
+      padding: 4rem;
+      color: var(--text-sub);
+    }
+    .spinner {
+      width: 44px; height: 44px;
+      border: 4px solid #e2e8f0;
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 1rem;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ======= CONTENT ======= */
+    #content { display: none; }
+
+    /* ======= ALERT BANNER ======= */
+    .alert-banner {
+      background: linear-gradient(135deg, #fef2f2, #fff5f5);
+      border: 1.5px solid #fca5a5;
+      border-left: 5px solid var(--danger);
+      border-radius: 10px;
+      padding: 1rem 1.5rem;
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .alert-banner .alert-icon { font-size: 1.8rem; }
+    .alert-banner .alert-text strong { color: var(--danger); font-size: 1rem; display: block; margin-bottom: 0.2rem; }
+    .alert-banner .alert-text span { color: #7f1d1d; font-size: 0.85rem; }
+
+    /* ======= KPI CARDS ======= */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    .kpi-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.25rem 1.5rem;
+      border-left: 5px solid var(--accent);
+      box-shadow: 0 1px 6px rgba(0,0,0,0.05);
+    }
+    .kpi-card.danger { border-left-color: var(--danger); }
+    .kpi-card.success { border-left-color: var(--success); }
+    .kpi-card.warning { border-left-color: var(--warning); }
+    .kpi-label { font-size: 0.78rem; color: var(--text-sub); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.5rem; }
+    .kpi-value { font-size: 1.9rem; font-weight: 800; color: var(--text); line-height: 1.1; }
+    .kpi-value.big { font-size: 1.5rem; }
+    .kpi-sub { font-size: 0.78rem; color: var(--text-sub); margin-top: 0.4rem; }
+    .kpi-trend { font-size: 0.82rem; font-weight: 700; margin-top: 0.4rem; }
+    .trend-up { color: var(--danger); }
+    .trend-down { color: var(--success); }
+    .trend-flat { color: var(--text-sub); }
+
+    /* ======= SECTION TITLE ======= */
+    .section-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--primary);
+      border-left: 4px solid var(--accent);
+      padding-left: 0.75rem;
+      margin-bottom: 1rem;
+    }
+
+    /* ======= 2-COL LAYOUT ======= */
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-bottom: 1.5rem; }
+    .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.25rem; margin-bottom: 1.5rem; }
+
+    /* ======= PANEL / TABLE ======= */
+    .panel {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.25rem;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.04);
+    }
+    table.exec-table { width: 100%; border-collapse: collapse; font-size: 0.83rem; }
+    table.exec-table th {
+      background: #f1f5f9;
+      color: var(--text-sub);
+      font-weight: 700;
+      padding: 0.5rem 0.75rem;
+      text-align: left;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+    table.exec-table td { padding: 0.55rem 0.75rem; border-bottom: 1px solid #f1f5f9; color: var(--text); }
+    table.exec-table tr:last-child td { border-bottom: none; }
+    table.exec-table tr:hover td { background: #f8fafc; }
+    .rank-num { font-weight: 800; color: var(--accent); }
+    .rank-1 { color: #d97706; }
+    .rank-2 { color: #94a3b8; }
+    .rank-3 { color: #92400e; }
+    .val-red { color: var(--danger); font-weight: 700; }
+    .val-purple { color: #7c3aed; font-weight: 700; }
+    .val-blue { color: var(--accent); font-weight: 700; }
+    .pct-badge {
+      display: inline-block;
+      padding: 0.1rem 0.4rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      background: #eff6ff;
+      color: var(--accent);
+    }
+
+    /* ======= DONUT MINI ======= */
+    .donut-row { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem; }
+    .donut-bar-bg { flex: 1; height: 10px; background: #e2e8f0; border-radius: 99px; overflow: hidden; }
+    .donut-bar-fill { height: 100%; border-radius: 99px; }
+    .donut-label { font-size: 0.8rem; min-width: 110px; color: var(--text); }
+    .donut-pct { font-size: 0.8rem; font-weight: 700; min-width: 38px; text-align: right; color: var(--text-sub); }
+
+    /* ======= NEOCA VS PROSP ======= */
+    .company-compare { display: flex; gap: 0.75rem; margin-bottom: 0.75rem; }
+    .company-block {
+      flex: 1; border-radius: 10px; padding: 1rem;
+      text-align: center;
+    }
+    .company-block.neoca { background: #eff6ff; border: 1.5px solid #bfdbfe; }
+    .company-block.prosp { background: #f0fdf4; border: 1.5px solid #bbf7d0; }
+    .company-name { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+    .company-name.neoca { color: #1d4ed8; }
+    .company-name.prosp { color: #15803d; }
+    .company-val { font-size: 1.35rem; font-weight: 800; margin: 0.25rem 0; }
+    .company-val.neoca { color: #1d4ed8; }
+    .company-val.prosp { color: #15803d; }
+    .company-pct { font-size: 0.78rem; color: var(--text-sub); }
+
+    /* ======= INSIGHT BOX ======= */
+    .insight-box {
+      background: #fafafa;
+      border: 1px solid #e2e8f0;
+      border-left: 4px solid var(--warning);
+      border-radius: 10px;
+      padding: 1rem 1.25rem;
+      margin-bottom: 1.5rem;
+    }
+    .insight-box h4 { font-size: 0.85rem; font-weight: 700; color: var(--warning); margin-bottom: 0.5rem; }
+    .insight-box ul { padding-left: 1.25rem; color: var(--text); font-size: 0.82rem; line-height: 1.9; }
+
+    /* ======= FOOTER ======= */
+    .report-footer {
+      margin-top: 2rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border);
+      font-size: 0.75rem;
+      color: var(--text-sub);
+      display: flex;
+      justify-content: space-between;
+    }
+
+    /* ======= PRINT ======= */
+    @media print {
+      body { padding: 0.5rem 1.5rem; background: #fff; font-size: 12px; }
+      .print-btn { display: none !important; }
+      .kpi-grid { grid-template-columns: repeat(4, 1fr); }
+      .kpi-value { font-size: 1.5rem; }
+      .panel { box-shadow: none; border: 1px solid #d1d5db; }
+      .two-col { grid-template-columns: 1fr 1fr; }
+      .three-col { grid-template-columns: 1fr 1fr 1fr; }
+      .alert-banner { background: #fff; }
+      @page { margin: 1.5cm; size: A4; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Print Button (hidden on print) -->
+  <button class="print-btn" onclick="window.print()">🖨️ พิมพ์ / บันทึก PDF</button>
+
+  <!-- Loading -->
+  <div id="loadingState">
+    <div class="spinner"></div>
+    <p>กำลังโหลดข้อมูลจากฐานข้อมูล...</p>
+  </div>
+
+  <!-- Content -->
+  <div id="content">
+
+    <!-- Header -->
+    <div class="report-header">
+      <div class="report-title">
+        <h1>📋 รายงานสรุปผู้บริหาร — ยาคืน</h1>
+        <p>Returned Medicines Executive Summary Report</p>
+      </div>
+      <div class="report-meta">
+        <strong id="reportPeriod">—</strong><br>
+        วันที่จัดทำ: <span id="reportDate">—</span><br>
+        บริษัท: Neoca &amp; Prosp
+      </div>
+    </div>
+
+    <!-- Alert Banner -->
+    <div class="alert-banner" id="alertBanner" style="display:none;">
+      <div class="alert-icon">⚠️</div>
+      <div class="alert-text">
+        <strong id="alertTitle">—</strong>
+        <span id="alertMsg">—</span>
+      </div>
+    </div>
+
+    <!-- KPI Cards -->
+    <div class="kpi-grid">
+      <div class="kpi-card danger">
+        <div class="kpi-label">มูลค่าคืนยารวม</div>
+        <div class="kpi-value big" id="kpiTotalVal">—</div>
+        <div class="kpi-trend" id="kpiTrend">—</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">จำนวนใบคืน (Bill)</div>
+        <div class="kpi-value" id="kpiBills">—</div>
+        <div class="kpi-sub">รายการยาทั้งหมด: <span id="kpiRows">—</span> รายการ</div>
+      </div>
+      <div class="kpi-card warning">
+        <div class="kpi-label">สาเหตุหลักที่คืน</div>
+        <div class="kpi-value big" id="kpiTopReason">—</div>
+        <div class="kpi-sub" id="kpiTopReasonPct">—</div>
+      </div>
+      <div class="kpi-card success">
+        <div class="kpi-label">ผ่าน QA (นำกลับได้)</div>
+        <div class="kpi-value" id="kpiQaPass">—</div>
+        <div class="kpi-sub" id="kpiQaPassPct">—</div>
+      </div>
+    </div>
+
+    <!-- Company Split -->
+    <div class="two-col">
+      <div class="panel">
+        <div class="section-title">เปรียบเทียบมูลค่าคืนยา: Neoca vs Prosp</div>
+        <div class="company-compare">
+          <div class="company-block neoca">
+            <div class="company-name neoca">Neoca</div>
+            <div class="company-val neoca" id="neocaVal">—</div>
+            <div class="company-pct" id="neocaPct">—</div>
+          </div>
+          <div class="company-block prosp">
+            <div class="company-name prosp">Prosp</div>
+            <div class="company-val prosp" id="prospVal">—</div>
+            <div class="company-pct" id="prospPct">—</div>
+          </div>
+        </div>
+        <div style="margin-top: 0.75rem;">
+          <div style="font-size:0.75rem; color:var(--text-sub); margin-bottom:0.3rem;">สัดส่วนมูลค่า</div>
+          <div style="height: 14px; background:#e2e8f0; border-radius:99px; overflow:hidden; display:flex;">
+            <div id="neocaBar" style="height:100%; background:#2563eb; border-radius:99px 0 0 99px; transition:width 0.5s;"></div>
+            <div id="prospBar" style="height:100%; background:#16a34a; border-radius:0 99px 99px 0; transition:width 0.5s;"></div>
+          </div>
+          <div style="display:flex; justify-content:space-between; font-size:0.72rem; color:var(--text-sub); margin-top:0.25rem;">
+            <span style="color:#2563eb; font-weight:700;" id="neocaBarLabel">Neoca —%</span>
+            <span style="color:#16a34a; font-weight:700;" id="prospBarLabel">Prosp —%</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="section-title">แนวโน้มมูลค่าคืนยา 3 เดือนล่าสุด</div>
+        <div id="trendRows">—</div>
+      </div>
+    </div>
+
+    <!-- Top Tables -->
+    <div class="two-col">
+      <!-- Top 10 Reasons -->
+      <div class="panel">
+        <div class="section-title">สาเหตุหลักในการคืนยา (Top 10)</div>
+        <table class="exec-table">
+          <thead>
+            <tr><th>#</th><th>สาเหตุ</th><th style="text-align:right;">มูลค่า</th><th>สัดส่วน</th></tr>
+          </thead>
+          <tbody id="reasonTableBody"></tbody>
+        </table>
+      </div>
+
+      <!-- QA breakdown -->
+      <div class="panel">
+        <div class="section-title">ผลการประเมิน QA — สรุปภาพรวม</div>
+        <div id="qaRows" style="margin-top:0.5rem;"></div>
+      </div>
+    </div>
+
+    <!-- Customer & Sales Rep -->
+    <div class="two-col">
+      <div class="panel">
+        <div class="section-title">🏆 10 ลูกค้าที่คืนยามูลค่าสูงสุด (ต้องติดตาม)</div>
+        <table class="exec-table">
+          <thead>
+            <tr><th>#</th><th>ชื่อลูกค้า</th><th>มูลค่า</th><th>%</th></tr>
+          </thead>
+          <tbody id="custTableBody"></tbody>
+        </table>
+      </div>
+      <div class="panel">
+        <div class="section-title">💼 10 ผู้แทนที่มียาคืนมูลค่าสูงสุด (ต้อง Coaching)</div>
+        <table class="exec-table">
+          <thead>
+            <tr><th>#</th><th>ชื่อผู้แทน</th><th>มูลค่า</th><th>%</th></tr>
+          </thead>
+          <tbody id="repTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Insight / Recommendation Box -->
+    <div class="insight-box" id="insightBox">
+      <h4>💡 สรุปประเด็นสำคัญสำหรับผู้บริหาร (Key Insights)</h4>
+      <ul id="insightList"></ul>
+    </div>
+
+    <!-- Footer -->
+    <div class="report-footer">
+      <span>ข้อมูลนำออกจากระบบ Returned Medicines Dashboard</span>
+      <span>จัดทำโดย: ฝ่ายควบคุมคุณภาพ | พิมพ์: <span id="printDate">—</span></span>
+    </div>
+
+  </div><!-- end #content -->
+
+  <script>
+    const SUPABASE_URL = 'https://atpseyotafqwkmoxylou.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF0cHNleW90YWZxd2ttb3h5bG91Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzMTUwODgsImV4cCI6MjA5NDg5MTA4OH0.bMjIoGBqNtakZ7nUuphOERfw_vwyBSCV8s0ozaitcwg';
+
+    const thMonths = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+    const enMonths = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+    function fmt(n) {
+      if (!n || isNaN(n)) return '฿0';
+      return '฿' + Number(n).toLocaleString('th-TH', {maximumFractionDigits: 0});
+    }
+    function fmtShort(n) {
+      return fmt(n);
+    }
+
+    function normalizeMonthStr(mStr) {
+      if (!mStr || mStr === 'Unknown') return mStr;
+      const parts = mStr.split(' ');
+      if (parts.length === 2) {
+        const y = parseInt(parts[1], 10);
+        if (y < 2500) return `${parts[0]} ${y + 543}`;
+      }
+      return mStr;
+    }
+
+    function monthToSortKey(mStr) {
+      if (!mStr || mStr === 'Unknown') return 0;
+      const parts = mStr.split(' ');
+      if (parts.length !== 2) return 0;
+      const mIdx = enMonths.indexOf(parts[0]);
+      const y = parseInt(parts[1], 10);
+      return y * 100 + mIdx;
+    }
+
+    async function loadData() {
+      const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+      let allRows = [];
+      const PAGE = 1000;
+      let from = 0;
+
+      while (true) {
+        const { data, error } = await client
+          .from('returned_medicines')
+          .select('*')
+          .range(from, from + PAGE - 1);
+        if (error) throw error;
+        if (!data || data.length === 0) break;
+        allRows = allRows.concat(data);
+        if (data.length < PAGE) break;
+        from += PAGE;
+      }
+
+      return allRows.map(r => ({
+        company: r.company || 'Unknown',
+        monthStr: normalizeMonthStr(r.month_str || 'Unknown'),
+        billNo: r.bill_no || '',
+        customerName: r.customer_name || '-',
+        salesRep: r.sales_rep || '-',
+        totalPrice: parseFloat(r.total_price) || 0,
+        returnReason: r.return_reason || '-',
+        qaWh: r.qa_wh || '-',
+        qaResult: r.qa_result || '-',
+        finalStatus: r.final_status || '-',
+      }));
+    }
+
+    function rankIcon(i) {
+      return i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i+1}`;
+    }
+    function rankClass(i) {
+      return i === 0 ? 'rank-1' : i === 1 ? 'rank-2' : i === 2 ? 'rank-3' : 'rank-num';
+    }
+
+    function buildReport(data) {
+      const now = new Date();
+      document.getElementById('reportDate').textContent = now.toLocaleDateString('th-TH', {year:'numeric',month:'long',day:'numeric'});
+      document.getElementById('printDate').textContent = now.toLocaleDateString('th-TH', {year:'numeric',month:'long',day:'numeric'});
+
+      // ---- KPI: Total ----
+      const totalVal = data.reduce((s,d) => s + d.totalPrice, 0);
+      const totalBills = new Set(data.map(d => d.billNo).filter(Boolean)).size;
+      document.getElementById('kpiTotalVal').textContent = fmtShort(totalVal);
+      document.getElementById('kpiBills').textContent = totalBills.toLocaleString();
+      document.getElementById('kpiRows').textContent = data.length.toLocaleString();
+
+      // ---- Months ----
+      const monthMap = {};
+      data.forEach(d => {
+        if (!monthMap[d.monthStr]) monthMap[d.monthStr] = 0;
+        monthMap[d.monthStr] += d.totalPrice;
+      });
+      const sortedMonths = Object.keys(monthMap).filter(m => m !== 'Unknown').sort((a,b) => monthToSortKey(a) - monthToSortKey(b));
+      const latestMonth = sortedMonths[sortedMonths.length - 1] || '—';
+      const prevMonth = sortedMonths[sortedMonths.length - 2] || null;
+
+      document.getElementById('reportPeriod').textContent = `ข้อมูล ณ เดือน ${latestMonth}`;
+
+      // Trend KPI
+      if (prevMonth) {
+        const currVal = monthMap[latestMonth] || 0;
+        const prevVal = monthMap[prevMonth] || 0;
+        const delta = prevVal > 0 ? ((currVal - prevVal) / prevVal * 100) : 0;
+        const trendEl = document.getElementById('kpiTrend');
+        if (delta > 0) {
+          trendEl.innerHTML = `<span class="trend-up">▲ ${delta.toFixed(1)}% จากเดือนก่อน (${prevMonth})</span>`;
+          // Show alert if jumped > 20%
+          if (delta > 20) {
+            document.getElementById('alertBanner').style.display = 'flex';
+            document.getElementById('alertTitle').textContent = `⚠️ มูลค่าคืนยาเดือน ${latestMonth} เพิ่มขึ้น ${delta.toFixed(1)}% — ต้องตรวจสอบเร่งด่วน!`;
+            document.getElementById('alertMsg').textContent = `จาก ${fmt(prevVal)} เพิ่มเป็น ${fmt(currVal)} (เพิ่มขึ้น ${fmt(currVal - prevVal)})`;
+          }
+        } else {
+          trendEl.innerHTML = `<span class="trend-down">▼ ${Math.abs(delta).toFixed(1)}% จากเดือนก่อน — ปรับตัวดีขึ้น</span>`;
+        }
+      } else {
+        document.getElementById('kpiTrend').textContent = 'ข้อมูลเดือนแรก';
+      }
+
+      // ---- Neoca vs Prosp ----
+      const neocaVal = data.filter(d => d.company === 'Neoca').reduce((s,d) => s+d.totalPrice, 0);
+      const prospVal = data.filter(d => d.company === 'Prosp').reduce((s,d) => s+d.totalPrice, 0);
+      const neocaPct = totalVal > 0 ? (neocaVal/totalVal*100) : 0;
+      const prospPct = totalVal > 0 ? (prospVal/totalVal*100) : 0;
+      document.getElementById('neocaVal').textContent = fmtShort(neocaVal);
+      document.getElementById('prospVal').textContent = fmtShort(prospVal);
+      document.getElementById('neocaPct').textContent = `${neocaPct.toFixed(1)}% ของมูลค่ารวม`;
+      document.getElementById('prospPct').textContent = `${prospPct.toFixed(1)}% ของมูลค่ารวม`;
+      document.getElementById('neocaBar').style.width = neocaPct + '%';
+      document.getElementById('prospBar').style.width = prospPct + '%';
+      document.getElementById('neocaBarLabel').textContent = `Neoca ${neocaPct.toFixed(1)}%`;
+      document.getElementById('prospBarLabel').textContent = `Prosp ${prospPct.toFixed(1)}%`;
+
+      // ---- Trend: Last 3 months ----
+      const last3 = sortedMonths.slice(-3);
+      const colors = ['#2563eb','#7c3aed','#dc2626'];
+      let trendHtml = '';
+      if (last3.length === 0) {
+        trendHtml = '<p style="color:#94a3b8;font-size:0.85rem;">ไม่มีข้อมูล</p>';
+      } else {
+        const maxVal = Math.max(...last3.map(m => monthMap[m] || 0)) || 1;
+        last3.forEach((m, i) => {
+          const v = monthMap[m] || 0;
+          const w = Math.round((v/maxVal)*100);
+          const isLatest = i === last3.length - 1;
+          trendHtml += `
+            <div class="donut-row" style="margin-bottom:0.65rem;">
+              <div class="donut-label" style="${isLatest ? 'font-weight:700;color:#0f172a;' : ''}">${m}</div>
+              <div class="donut-bar-bg">
+                <div class="donut-bar-fill" style="width:${w}%; background:${colors[i]};"></div>
+              </div>
+              <div class="donut-pct" style="${isLatest ? 'color:#dc2626;font-weight:800;' : ''}">${fmtShort(v)}</div>
+            </div>`;
+        });
+        if (last3.length >= 2) {
+          const prev = monthMap[last3[last3.length-2]] || 0;
+          const curr = monthMap[last3[last3.length-1]] || 0;
+          const d = prev > 0 ? ((curr-prev)/prev*100) : 0;
+          const arrow = d >= 0 ? '▲' : '▼';
+          const cls = d >= 0 ? 'color:#dc2626' : 'color:#16a34a';
+          trendHtml += `<div style="text-align:right; font-size:0.8rem; margin-top:0.5rem; ${cls}; font-weight:700;">${arrow} ${Math.abs(d).toFixed(1)}% MoM</div>`;
+        }
+      }
+      document.getElementById('trendRows').innerHTML = trendHtml;
+
+      // ---- Top 10 Reasons ----
+      const reasonMap = {};
+      data.forEach(d => { if (d.returnReason && d.returnReason !== '-') reasonMap[d.returnReason] = (reasonMap[d.returnReason]||0)+d.totalPrice; });
+      const sortedReasons = Object.keys(reasonMap).map(k => ({name:k, val:reasonMap[k]})).sort((a,b) => b.val-a.val);
+      const totalReasons = sortedReasons.reduce((s,r) => s+r.val, 0) || 1;
+      document.getElementById('kpiTopReason').textContent = sortedReasons[0]?.name.slice(0,20) || '—';
+      document.getElementById('kpiTopReasonPct').textContent = sortedReasons[0] ? `${((sortedReasons[0].val/totalReasons)*100).toFixed(1)}% ของมูลค่าสาเหตุทั้งหมด` : '—';
+      let rBody = '';
+      sortedReasons.slice(0,10).forEach((r, i) => {
+        const pct = ((r.val/totalReasons)*100).toFixed(1);
+        rBody += `<tr>
+          <td class="${rankClass(i)}">${rankIcon(i)}</td>
+          <td title="${r.name}">${r.name.length > 35 ? r.name.slice(0,35)+'…' : r.name}</td>
+          <td style="text-align:right; font-weight:700;">${fmt(r.val)}</td>
+          <td><span class="pct-badge">${pct}%</span></td>
+        </tr>`;
+      });
+      document.getElementById('reasonTableBody').innerHTML = rBody;
+
+      // ---- QA Result ----
+      const qaMap = {};
+      data.forEach(d => { if (d.qaResult && d.qaResult !== '-') qaMap[d.qaResult] = (qaMap[d.qaResult]||0)+d.totalPrice; });
+      const totalQa = Object.values(qaMap).reduce((s,v) => s+v, 0) || 1;
+      const sortedQa = Object.keys(qaMap).map(k => ({name:k, val:qaMap[k]})).sort((a,b) => b.val-a.val);
+      const qaColors = ['#2563eb','#16a34a','#d97706','#dc2626','#7c3aed','#0891b2'];
+
+      // Find pass-type
+      const passKeywords = ['ผ่าน','pass','ok','approve','คืนคลัง','นำกลับ'];
+      let passVal = 0;
+      sortedQa.forEach(q => {
+        const lower = q.name.toLowerCase();
+        if (passKeywords.some(k => lower.includes(k))) { passVal += q.val; }
+      });
+      const passPct = (passVal/totalQa*100).toFixed(1);
+      document.getElementById('kpiQaPass').textContent = fmtShort(passVal);
+      document.getElementById('kpiQaPassPct').textContent = `${passPct}% ของมูลค่ายาคืนทั้งหมด`;
+
+      let qaHtml = '';
+      sortedQa.slice(0,6).forEach((q, i) => {
+        const pct = ((q.val/totalQa)*100).toFixed(1);
+        const w = Math.round((q.val/totalQa)*100);
+        qaHtml += `
+          <div class="donut-row" style="margin-bottom:0.65rem;">
+            <div class="donut-label">${q.name.length>25?q.name.slice(0,25)+'…':q.name}</div>
+            <div class="donut-bar-bg">
+              <div class="donut-bar-fill" style="width:${w}%;background:${qaColors[i]};"></div>
+            </div>
+            <div class="donut-pct" style="color:${qaColors[i]};font-weight:700;">${pct}%</div>
+          </div>`;
+      });
+      document.getElementById('qaRows').innerHTML = qaHtml;
+
+      // ---- Top 10 Customers ----
+      const custMap = {};
+      data.forEach(d => { if (d.customerName && d.customerName !== '-') custMap[d.customerName] = (custMap[d.customerName]||0)+d.totalPrice; });
+      const sortedCust = Object.keys(custMap).map(k => ({name:k, val:custMap[k]})).sort((a,b) => b.val-a.val);
+      const totalCust = sortedCust.reduce((s,c) => s+c.val, 0) || 1;
+      let cBody = '';
+      sortedCust.slice(0,10).forEach((c, i) => {
+        const pct = ((c.val/totalCust)*100).toFixed(1);
+        cBody += `<tr>
+          <td class="${rankClass(i)}">${rankIcon(i)}</td>
+          <td title="${c.name}">${c.name.length>30?c.name.slice(0,30)+'…':c.name}</td>
+          <td class="val-purple" style="text-align:right;">${fmt(c.val)}</td>
+          <td><span class="pct-badge">${pct}%</span></td>
+        </tr>`;
+      });
+      document.getElementById('custTableBody').innerHTML = cBody || '<tr><td colspan="4" style="text-align:center;color:#94a3b8;padding:1rem;">ไม่มีข้อมูล</td></tr>';
+
+      // ---- Top 10 Sales Reps ----
+      const repMap = {};
+      data.forEach(d => { if (d.salesRep && d.salesRep !== '-') repMap[d.salesRep] = (repMap[d.salesRep]||0)+d.totalPrice; });
+      const sortedRep = Object.keys(repMap).map(k => ({name:k, val:repMap[k]})).sort((a,b) => b.val-a.val);
+      const totalRep = sortedRep.reduce((s,r) => s+r.val, 0) || 1;
+      let rRepBody = '';
+      sortedRep.slice(0,10).forEach((r, i) => {
+        const pct = ((r.val/totalRep)*100).toFixed(1);
+        rRepBody += `<tr>
+          <td class="${rankClass(i)}">${rankIcon(i)}</td>
+          <td title="${r.name}">${r.name.length>30?r.name.slice(0,30)+'…':r.name}</td>
+          <td class="val-red" style="text-align:right;">${fmt(r.val)}</td>
+          <td><span class="pct-badge">${pct}%</span></td>
+        </tr>`;
+      });
+      document.getElementById('repTableBody').innerHTML = rRepBody || '<tr><td colspan="4" style="text-align:center;color:#94a3b8;padding:1rem;">ไม่มีข้อมูล (กรุณา Sync ข้อมูลก่อน)</td></tr>';
+
+      // ---- Insight ----
+      const insights = [];
+      const totalValM = totalVal;
+      if (sortedReasons[0]) insights.push(`สาเหตุหลักที่ทำให้เกิดยาคืนคือ <strong>"${sortedReasons[0].name}"</strong> คิดเป็น ${((sortedReasons[0].val/totalReasons)*100).toFixed(1)}% — ควรเร่งสอบสวนและออกมาตรการป้องกัน`);
+      if (neocaPct > prospPct) {
+        insights.push(`Neoca มีสัดส่วนมูลค่าคืนยา <strong>${neocaPct.toFixed(1)}%</strong> ซึ่งสูงกว่า Prosp — ควรทบทวนกระบวนการเซลล์และการตรวจสอบก่อนส่ง`);
+      } else {
+        insights.push(`Prosp มีสัดส่วนมูลค่าคืนยา <strong>${prospPct.toFixed(1)}%</strong> ซึ่งสูงกว่า Neoca — ควรทบทวนกระบวนการเซลล์และการตรวจสอบก่อนส่ง`);
+      }
+      if (sortedCust[0]) insights.push(`ลูกค้า <strong>"${sortedCust[0].name}"</strong> มีมูลค่าคืนยาสูงสุดที่ ${fmtShort(sortedCust[0].val)} — ควรนัดประชุมเพื่อวิเคราะห์สาเหตุและวางแผนร่วมกัน`);
+      if (sortedRep[0]) insights.push(`ผู้แทน <strong>"${sortedRep[0].name}"</strong> มียาคืนมูลค่าสูงสุดที่ ${fmtShort(sortedRep[0].val)} — ควรจัดโปรแกรม Coaching เพื่อพัฒนาทักษะการขาย`);
+      if (parseFloat(passPct) < 50) insights.push(`ยาที่ผ่านการประเมิน QA มีสัดส่วนน้อยกว่า 50% — ควรตรวจสอบกระบวนการเก็บและขนส่งสินค้า`);
+
+      document.getElementById('insightList').innerHTML = insights.map(i => `<li>${i}</li>`).join('');
+    }
+
+    // === MAIN ===
+    (async () => {
+      try {
+        const data = await loadData();
+        document.getElementById('loadingState').style.display = 'none';
+        document.getElementById('content').style.display = 'block';
+        buildReport(data);
+      } catch (err) {
+        document.getElementById('loadingState').innerHTML = `
+          <div style="font-size:2rem;">❌</div>
+          <p style="color:#dc2626; font-weight:700; margin-top:0.5rem;">โหลดข้อมูลล้มเหลว</p>
+          <p style="font-size:0.85rem; color:#64748b; margin-top:0.25rem;">${err.message}</p>
+          <p style="font-size:0.8rem; color:#94a3b8; margin-top:1rem;">กรุณาตรวจสอบการเชื่อมต่ออินเตอร์เน็ต แล้วรีเฟรชหน้าเว็บใหม่</p>`;
+      }
+    })();
+  </script>
+</body>
+</html>
