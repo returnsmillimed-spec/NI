@@ -680,11 +680,20 @@
     const salesRepSearch = document.getElementById('salesRepSearch');
     const salesRepSearchBtn = document.getElementById('salesRepSearchBtn');
 
-    // Load persisted data
-    localforage.getItem('returnedData').then(data => {
+    // Load persisted data from localforage FIRST (highest priority)
+    localforage.getItem('returnedData').then(async data => {
       if (data && data.length > 0) {
         allData = data;
         updateView();
+        
+        // Auto-connect Supabase silently, do NOT auto-load to prevent overwriting local data
+        await connectSupabase();
+      } else {
+        // No local data — try to load from Supabase
+        await connectSupabase();
+        if (supabaseClient) {
+          await loadFromSupabase();
+        }
       }
     });
 
@@ -1798,13 +1807,6 @@
       btn.disabled = false;
       btn.textContent = '📥 โหลดจาก Supabase';
     }
-
-    // Auto-connect and load on startup
-    connectSupabase().then(() => {
-      if (supabaseClient) {
-        loadFromSupabase();
-      }
-    });
 
   </script>
 </body>
