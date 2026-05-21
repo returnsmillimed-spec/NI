@@ -1373,11 +1373,19 @@
       msgEl.style.color = '#94a3b8';
 
       try {
+        // Deduplicate data to prevent "cannot affect row a second time" error
+        const uniqueMap = new Map();
+        allData.forEach(d => {
+          const key = `${d.billNo}_${d.lot}_${d.itemCode}`;
+          uniqueMap.set(key, d);
+        });
+        const dataToUpload = Array.from(uniqueMap.values());
+
         // Upsert in batches of 500
         const BATCH = 500;
         let uploaded = 0;
-        for (let i = 0; i < allData.length; i += BATCH) {
-          const batch = allData.slice(i, i + BATCH).map(d => ({
+        for (let i = 0; i < dataToUpload.length; i += BATCH) {
+          const batch = dataToUpload.slice(i, i + BATCH).map(d => ({
             company: d.company,
             month_str: d.monthStr,
             bill_no: d.billNo,
@@ -1399,9 +1407,9 @@
           const { error } = await supabaseClient.from('returned_medicines').upsert(batch, { onConflict: 'bill_no,lot,item_code' });
           if (error) throw error;
           uploaded += batch.length;
-          msgEl.textContent = `⏳ อัปโหลดแล้ว ${uploaded.toLocaleString()} / ${allData.length.toLocaleString()} รายการ...`;
+          msgEl.textContent = `⏳ อัปโหลดแล้ว ${uploaded.toLocaleString()} / ${dataToUpload.length.toLocaleString()} รายการ...`;
         }
-        msgEl.textContent = `✅ Sync สำเร็จ! อัปโหลดทั้งหมด ${allData.length.toLocaleString()} รายการ`;
+        msgEl.textContent = `✅ Sync สำเร็จ! อัปโหลดทั้งหมด ${dataToUpload.length.toLocaleString()} รายการ`;
         msgEl.style.color = '#10b981';
       } catch (err) {
         msgEl.textContent = '❌ Sync ล้มเหลว: ' + (err.message || JSON.stringify(err));
