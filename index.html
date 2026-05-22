@@ -472,7 +472,7 @@
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 1rem;">
         <h3 style="margin: 0;">ข้อมูลรายละเอียดรายการทั้งหมด (สอบกลับ)</h3>
         <div style="display: flex; align-items: center; gap: 0.5rem;">
-          <button class="pdf-btn" onclick="downloadPDF('dataTableWrapper', 'Data_Table')">💾 PDF</button>
+          <button class="pdf-btn" style="background: rgba(16, 185, 129, 0.1); color: #10b981; border-color: rgba(16, 185, 129, 0.3);" onclick="exportFilteredData()">📥 โหลด Excel (CSV)</button>
           <label style="color: #64748b; font-weight: bold; margin-left: 1rem;">🔍 กรองเฉพาะผู้แทน:</label>
           <input type="text" id="tableSalesRepSearch" placeholder="ระบุชื่อผู้แทน..." style="width: 200px; padding: 0.5rem; border-radius: 6px; background: #ffffff; color: #1e293b; border: 1px solid #cbd5e1; outline: none;">
         </div>
@@ -1778,6 +1778,50 @@
       btn.textContent = '📥 โหลดจาก Supabase';
     }
 
+    function exportFilteredData() {
+      if (!currentFilteredData || currentFilteredData.length === 0) {
+        alert('ไม่มีข้อมูลให้ส่งออก');
+        return;
+      }
+      
+      // Prepare data for CSV
+      const csvData = currentFilteredData.map(row => ({
+        'บริษัท': row.company,
+        'เดือน (ที่ดึงข้อมูลมา)': row.monthStr,
+        'เลขที่บิล': row.billNo,
+        'วันที่ออกบิล': row.billDate,
+        'ชื่อลูกค้า': row.customerName,
+        'พนักงานขาย': row.salesRep,
+        'รหัสสินค้า': row.itemCode,
+        'ชื่อสินค้า': row.productName,
+        'Lot': row.lot,
+        'MFG': row.mfgD,
+        'EXP': row.expD,
+        'จำนวน': row.qty,
+        'หน่วย': row.um,
+        'ราคารวม': row.totalPrice,
+        'สาเหตุการคืน': row.returnReason,
+        'สถานะคลัง (QA/WH)': row.qaWh,
+        'ผลประเมิน (QA)': row.qaResult,
+        'สถานะสุดท้าย': row.finalStatus
+      }));
+
+      // Convert to CSV string with PapaParse
+      const csv = Papa.unparse(csvData);
+      
+      // Add UTF-8 BOM so Excel opens it with correct Thai characters
+      const bom = new Uint8Array([0xEF, 0xBB, 0xBF]);
+      const blob = new Blob([bom, csv], { type: 'text/csv;charset=utf-8;' });
+      
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', 'Filtered_Returns_Data.csv');
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
   </script>
 </body>
 </html>
