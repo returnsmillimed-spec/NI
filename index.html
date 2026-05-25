@@ -416,6 +416,7 @@
         <div style="font-size: 0.75rem; color: #475569; display: flex; justify-content: space-around; border-top: 1px solid rgba(239, 68, 68, 0.2); padding-top: 0.5rem;">
           <div title="คำนวณจากคีย์เวิร์ด ทำลาย, ทิ้ง">ทำลาย: <strong id="netDestroy" style="color:#dc2626;">฿0 (0%)</strong></div>
           <div title="คำนวณจากคีย์เวิร์ด หมดอายุ, expire">หมดอายุ: <strong id="netExpire" style="color:#f59e0b;">฿0 (0%)</strong></div>
+          <div title="สาเหตุอื่นๆ ที่ไม่ได้ระบุว่าทำลายหรือหมดอายุ">อื่นๆ: <strong id="netOther" style="color:#64748b;">฿0 (0%)</strong></div>
         </div>
       </div>
       <div class="glass card color-emerald" style="background: rgba(16, 185, 129, 0.05); border: 1px solid #10b981;">
@@ -1503,6 +1504,8 @@
       const destroyKeywords = ['ทำลาย', 'destroy', 'ทิ้ง'];
       let netExpire = 0;
       let netDestroy = 0;
+      let netOther = 0;
+
       filtered.forEach(d => {
         const isQaWh = passKeywords.some(k => (d.qaWh || '').toLowerCase().includes(k));
         const isQa = passKeywords.some(k => (d.qaResult || '').toLowerCase().includes(k));
@@ -1512,11 +1515,14 @@
             netDestroy += (d.totalPrice || 0);
           } else if (expireKeywords.some(k => txt.includes(k))) {
             netExpire += (d.totalPrice || 0);
+          } else {
+            netOther += (d.totalPrice || 0);
           }
         }
       });
       const destroyPct = netValue > 0 ? ((netDestroy / netValue) * 100).toFixed(1) : 0;
       const expirePct = netValue > 0 ? ((netExpire / netValue) * 100).toFixed(1) : 0;
+      const otherPct = netValue > 0 ? ((netOther / netValue) * 100).toFixed(1) : 0;
       
       const combinedQa = qaWhReturn + qaReturn;
       const qaWhPct = combinedQa > 0 ? ((qaWhReturn / combinedQa) * 100).toFixed(1) : 0;
@@ -1542,6 +1548,8 @@
       if(netDestroyEl) netDestroyEl.innerText = `${formatCurrency(netDestroy)} (${destroyPct}%)`;
       const netExpireEl = document.getElementById('netExpire');
       if(netExpireEl) netExpireEl.innerText = `${formatCurrency(netExpire)} (${expirePct}%)`;
+      const netOtherEl = document.getElementById('netOther');
+      if(netOtherEl) netOtherEl.innerText = `${formatCurrency(netOther)} (${otherPct}%)`;
 
       const sumQaCombinedEl = document.getElementById('sumQaCombined');
       if(sumQaCombinedEl) sumQaCombinedEl.innerText = formatCurrency(combinedQa);
