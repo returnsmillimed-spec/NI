@@ -130,9 +130,65 @@
       padding: 1.5rem; border-bottom: 1px solid #e2e8f0;
       display: flex; justify-content: space-between; align-items: center;
     }
-    .modal-body {
-      padding: 1.5rem; overflow-y: auto; flex: 1;
+    .modal-body { padding: 1.5rem; overflow-y: auto; flex: 1; }
+    
+    /* Split Modal specific classes */
+    .split-modal-content {
+      background: #ffffff;
+      width: 98vw;
+      max-width: 1800px;
+      height: 92vh;
+      border-radius: 12px;
+      display: flex;
+      flex-direction: row;
+      position: relative;
+      overflow: hidden;
     }
+    .modal-left-pane {
+      width: 25%;
+      min-width: 320px;
+      border-right: 1px solid #e2e8f0;
+      display: flex;
+      flex-direction: column;
+      background: #f8fafc;
+    }
+    .modal-right-pane {
+      width: 75%;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: #ffffff;
+      position: relative;
+    }
+    .modal-right-pane-body table th,
+    .modal-right-pane-body table td {
+      font-size: 0.85rem;
+      padding: 0.5rem 0.75rem;
+    }
+    .modal-right-pane-header {
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid #e2e8f0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #ffffff;
+    }
+    .modal-right-pane-body {
+      padding: 1.5rem;
+      overflow-y: auto;
+      flex: 1;
+    }
+    .placeholder-text {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100%;
+      color: #94a3b8;
+      font-size: 1.2rem;
+    }
+    .clickable-row:hover { background: #f1f5f9; }
+    .clickable-row.active-row { background: #e0f2fe; }
+    
     .close-btn {
       background: none; border: none; color: #64748b; font-size: 1.5rem; cursor: pointer;
     }
@@ -247,7 +303,22 @@
     .pdf-btn:hover {
       background: #ef4444;
       color: #fff;
+    }    .custom-tooltip {
+      position: fixed;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(8px);
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 12px;
+      font-size: 0.8rem;
+      color: #0f172a;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      pointer-events: none;
+      z-index: 9999;
+      transition: opacity 0.15s ease-in-out;
     }
+    .custom-tooltip .tooltip-name { font-weight: 700; color: #1e293b; }
+    .custom-tooltip .tooltip-value { font-weight: 700; font-size: 0.85rem; }
   </style>
 </head>
 <body>
@@ -316,7 +387,7 @@
 
     <!-- Summary Cards -->
     <div class="grid-4">
-      <div class="glass card">
+      <div class="glass card color-amber">
         <h4>มูลค่าการคืนรวม</h4>
         <h2 id="sumValue">฿0</h2>
         <div class="card-breakdown">
@@ -324,36 +395,69 @@
           <span class="badge-prosp" id="valProsp">Prosp: ฿0</span>
         </div>
       </div>
-      <div class="glass card color-amber">
-        <h4>จำนวนรายการบิล (Bill No.)</h4>
-        <h2 id="sumRows">0 รายการ</h2>
+      <div class="glass card color-rose">
+        <h4>มูลค่าการคืนทั้งหมด (หักกลับเข้าคลัง)</h4>
+        <h2 id="sumNetValue">฿0</h2>
         <div class="card-breakdown">
-          <span class="badge-neoca" id="billNeoca">Neoca: 0</span>
-          <span class="badge-prosp" id="billProsp">Prosp: 0</span>
+          <span class="badge-neoca" id="netNeoca">Neoca: ฿0</span>
+          <span class="badge-prosp" id="netProsp">Prosp: ฿0</span>
         </div>
       </div>
       <div class="glass card color-emerald">
-        <h4>จำนวน Lot ที่คืน</h4>
-        <h2 id="sumLots">0 Lot</h2>
+        <h4>มูลค่า QA/WH นำกลับเข้าคลัง</h4>
+        <h2 id="sumQaWhReturn">฿0</h2>
         <div class="card-breakdown">
-          <span class="badge-neoca" id="lotNeoca">Neoca: 0</span>
-          <span class="badge-prosp" id="lotProsp">Prosp: 0</span>
+          <span class="badge-neoca" id="qaWhNeoca">Neoca: ฿0</span>
+          <span class="badge-prosp" id="qaWhProsp">Prosp: ฿0</span>
         </div>
       </div>
-      <div class="glass card color-rose">
-        <h4>สาเหตุหลักที่คืน</h4>
-        <h2 id="sumReason" style="font-size: 1.2rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">-</h2>
+      <div class="glass card color-emerald">
+        <h4>มูลค่าการคืน ที่ประเมิณโดย QA (นำเข้าคลัง)</h4>
+        <h2 id="sumQaReturn">฿0</h2>
         <div class="card-breakdown">
-          <span class="badge-neoca" id="reasonNeoca">Neoca: 0</span>
-          <span class="badge-prosp" id="reasonProsp">Prosp: 0</span>
+          <span class="badge-neoca" id="qaNeoca">Neoca: ฿0</span>
+          <span class="badge-prosp" id="qaProsp">Prosp: ฿0</span>
         </div>
       </div>
     </div>
 
-    <!-- Charts Row: Monthly Trend -->
-    <div class="glass" style="padding: 1.5rem; margin-bottom: 1.5rem;" id="monthlyChartWrapper">
-      <h3 style="margin: 0 0 1rem 0;">มูลค่าการคืนยารวมรายเดือน (เปรียบเทียบบริษัท)</h3>
-      <div class="chart-container"><canvas id="monthlyChart"></canvas></div>
+    <!-- Charts Row: Monthly Trend & Side Cards -->
+    <div style="display: grid; grid-template-columns: 2.5fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem; align-items: stretch;">
+      
+      <!-- Left: Monthly Chart -->
+      <div class="glass" style="padding: 1.5rem; display: flex; flex-direction: column;" id="monthlyChartWrapper">
+        <h3 style="margin: 0 0 1rem 0;">มูลค่าการคืนยารวมรายเดือน (เปรียบเทียบบริษัท)</h3>
+        <div class="chart-container" style="flex: 1; min-height: 350px;"><canvas id="monthlyChart"></canvas></div>
+      </div>
+
+      <!-- Right: 3 Summary Cards -->
+      <div style="display: flex; flex-direction: column; gap: 1.5rem; justify-content: space-between;">
+        <div class="glass card color-amber" style="margin-bottom: 0; flex: 1; display: flex; flex-direction: column; justify-content: center;">
+          <h4>จำนวนรายการบิล (Bill No.)</h4>
+          <h2 id="sumRows">0 รายการ</h2>
+          <div class="card-breakdown">
+            <span class="badge-neoca" id="billNeoca">Neoca: 0</span>
+            <span class="badge-prosp" id="billProsp">Prosp: 0</span>
+          </div>
+        </div>
+        <div class="glass card color-emerald" style="margin-bottom: 0; flex: 1; display: flex; flex-direction: column; justify-content: center;">
+          <h4>จำนวน Lot ที่คืน</h4>
+          <h2 id="sumLots">0 Lot</h2>
+          <div class="card-breakdown">
+            <span class="badge-neoca" id="lotNeoca">Neoca: 0</span>
+            <span class="badge-prosp" id="lotProsp">Prosp: 0</span>
+          </div>
+        </div>
+        <div class="glass card color-rose" style="margin-bottom: 0; flex: 1; display: flex; flex-direction: column; justify-content: center;">
+          <h4>สาเหตุหลักที่คืน</h4>
+          <h2 id="sumReason" style="font-size: 1.2rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">-</h2>
+          <div class="card-breakdown">
+            <span class="badge-neoca" id="reasonNeoca">Neoca: 0</span>
+            <span class="badge-prosp" id="reasonProsp">Prosp: 0</span>
+          </div>
+        </div>
+      </div>
+
     </div>
 
     <!-- Customer and Sales Rep Charts Row -->
@@ -362,12 +466,30 @@
       <div class="glass clickable-chart" style="padding: 1.5rem; margin-bottom: 1.5rem;" id="customerChartWrapper" onclick="openModal('customerModal')">
         <div style="display: flex; justify-content: space-between; align-items: flex-start;">
           <div>
-            <h3 style="margin: 0 0 0.5rem 0;">🏆 10 อันดับลูกค้าที่คืนยามูลค่าสูงสุด</h3>
-            <p style="margin: 0 0 0.5rem 0; font-size: 0.8rem; color: #64748b;">คลิกที่แถบเพื่อดูรายละเอียด</p>
+            <h3 style="margin: 0 0 0.25rem 0;">🏆 10 อันดับลูกค้าที่คืนยามูลค่าสูงสุด</h3>
+            <p style="margin: 0 0 0.5rem 0; font-size: 0.78rem; color: #94a3b8;">เอาเมาส์ไปชี้แถบเพื่อดูรายละเอียด • คลิกดูทั้งหมด</p>
           </div>
           <span style="color: #8b5cf6; font-size: 0.8rem; background: rgba(139,92,246,0.1); padding: 0.2rem 0.5rem; border-radius: 4px;">คลิกดูทั้งหมด</span>
         </div>
-        <div class="chart-container" style="height: 420px;">
+        <div id="custChartSummary" style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:0.75rem;" onclick="event.stopPropagation()">
+          <div style="flex:1; min-width:130px; background:rgba(139,92,246,0.1); border:1px solid rgba(139,92,246,0.3); border-radius:8px; padding:0.5rem 0.75rem;">
+            <div style="font-size:0.7rem; color:#94a3b8; margin-bottom:0.2rem;">💰 มูลค่าคืนรวม (Top 10)</div>
+            <div id="custSumTotal" style="font-size:1rem; font-weight:700; color:#a78bfa;">฿0</div>
+          </div>
+          <div style="flex:1; min-width:130px; background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.3); border-radius:8px; padding:0.5rem 0.75rem;">
+            <div style="font-size:0.7rem; color:#94a3b8; margin-bottom:0.2rem;">✅ QA/WH นำกลับเข้าคลัง</div>
+            <div id="custSumQaWh" style="font-size:1rem; font-weight:700; color:#34d399;">฿0</div>
+          </div>
+          <div style="flex:1; min-width:130px; background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.3); border-radius:8px; padding:0.5rem 0.75rem;">
+            <div style="font-size:0.7rem; color:#94a3b8; margin-bottom:0.2rem;">✅ ประเมิณโดย QA นำกลับ</div>
+            <div id="custSumQa" style="font-size:1rem; font-weight:700; color:#34d399;">฿0</div>
+          </div>
+          <div style="flex:1; min-width:130px; background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); border-radius:8px; padding:0.5rem 0.75rem;">
+            <div style="font-size:0.7rem; color:#94a3b8; margin-bottom:0.2rem;">📉 สุทธิ (หักกลับเข้าคลัง)</div>
+            <div id="custSumNet" style="font-size:1rem; font-weight:700; color:#f87171;">฿0</div>
+          </div>
+        </div>
+        <div class="chart-container" style="height: 400px;">
           <canvas id="customerChart"></canvas>
         </div>
       </div>
@@ -376,12 +498,30 @@
       <div class="glass clickable-chart" style="padding: 1.5rem; margin-bottom: 1.5rem;" id="salesRepChartWrapper" onclick="openModal('salesRepModal')">
         <div style="display: flex; justify-content: space-between; align-items: flex-start;">
           <div>
-            <h3 style="margin: 0 0 0.5rem 0;">💼 10 อันดับผู้แทนที่มียาคืนมูลค่าสูงสุด</h3>
-            <p style="margin: 0 0 0.5rem 0; font-size: 0.8rem; color: #64748b;">คลิกที่แถบเพื่อดูรายละเอียด</p>
+            <h3 style="margin: 0 0 0.25rem 0;">💼 10 อันดับผู้แทนที่มียาคืนมูลค่าสูงสุด</h3>
+            <p style="margin: 0 0 0.5rem 0; font-size: 0.78rem; color: #94a3b8;">เอาเมาส์ไปชี้แถบเพื่อดูรายละเอียด • คลิกดูทั้งหมด</p>
           </div>
           <span style="color: #f43f5e; font-size: 0.8rem; background: rgba(244,63,94,0.1); padding: 0.2rem 0.5rem; border-radius: 4px;">คลิกดูทั้งหมด</span>
         </div>
-        <div class="chart-container" style="height: 420px;">
+        <div id="repChartSummary" style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:0.75rem;" onclick="event.stopPropagation()">
+          <div style="flex:1; min-width:130px; background:rgba(244,63,94,0.1); border:1px solid rgba(244,63,94,0.3); border-radius:8px; padding:0.5rem 0.75rem;">
+            <div style="font-size:0.7rem; color:#94a3b8; margin-bottom:0.2rem;">💰 มูลค่าคืนรวม (Top 10)</div>
+            <div id="repSumTotal" style="font-size:1rem; font-weight:700; color:#fb7185;">฿0</div>
+          </div>
+          <div style="flex:1; min-width:130px; background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.3); border-radius:8px; padding:0.5rem 0.75rem;">
+            <div style="font-size:0.7rem; color:#94a3b8; margin-bottom:0.2rem;">✅ QA/WH นำกลับเข้าคลัง</div>
+            <div id="repSumQaWh" style="font-size:1rem; font-weight:700; color:#34d399;">฿0</div>
+          </div>
+          <div style="flex:1; min-width:130px; background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.3); border-radius:8px; padding:0.5rem 0.75rem;">
+            <div style="font-size:0.7rem; color:#94a3b8; margin-bottom:0.2rem;">✅ ประเมิณโดย QA นำกลับ</div>
+            <div id="repSumQa" style="font-size:1rem; font-weight:700; color:#34d399;">฿0</div>
+          </div>
+          <div style="flex:1; min-width:130px; background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); border-radius:8px; padding:0.5rem 0.75rem;">
+            <div style="font-size:0.7rem; color:#94a3b8; margin-bottom:0.2rem;">📉 สุทธิ (หักกลับเข้าคลัง)</div>
+            <div id="repSumNet" style="font-size:1rem; font-weight:700; color:#f87171;">฿0</div>
+          </div>
+        </div>
+        <div class="chart-container" style="height: 400px;">
           <canvas id="salesRepChart"></canvas>
         </div>
       </div>
@@ -392,14 +532,30 @@
       <div class="glass clickable-chart" style="padding: 1.5rem;" id="productChartWrapper" onclick="openModal('productModal')">
         <div style="display: flex; justify-content: space-between; align-items: flex-start;">
           <div>
-            <h3 style="margin: 0 0 0.5rem 0;">10 อันดับยาที่มีการคืนสูงสุด (ตามมูลค่า)</h3>
+            <h3 style="margin: 0 0 0.25rem 0;">10 อันดับยาที่มีการคืนสูงสุด (ตามมูลค่า)</h3>
             <div style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem;" onclick="event.stopPropagation()">
               <button class="chart-toggle-btn active" onclick="setChartFilter('barChart', 'Neoca', this)">Neoca</button>
               <button class="chart-toggle-btn" onclick="setChartFilter('barChart', 'Prosp', this)">Prosp</button>
             </div>
           </div>
-          <div style="display: flex; gap: 0.5rem; align-items: center;">
-            <span style="color: #38bdf8; font-size: 0.8rem; background: rgba(56, 189, 248, 0.1); padding: 0.2rem 0.5rem; border-radius: 4px;">คลิกดูทั้งหมด</span>
+          <span style="color: #38bdf8; font-size: 0.8rem; background: rgba(56, 189, 248, 0.1); padding: 0.2rem 0.5rem; border-radius: 4px;">คลิกดูทั้งหมด</span>
+        </div>
+        <div id="prodChartSummary" style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:0.75rem;" onclick="event.stopPropagation()">
+          <div style="flex:1; min-width:130px; background:rgba(56,189,248,0.1); border:1px solid rgba(56,189,248,0.3); border-radius:8px; padding:0.5rem 0.75rem;">
+            <div style="font-size:0.7rem; color:#94a3b8; margin-bottom:0.2rem;">💰 มูลค่าคืนรวม (Top 10)</div>
+            <div id="prodSumTotal" style="font-size:1rem; font-weight:700; color:#38bdf8;">฿0</div>
+          </div>
+          <div style="flex:1; min-width:130px; background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.3); border-radius:8px; padding:0.5rem 0.75rem;">
+            <div style="font-size:0.7rem; color:#94a3b8; margin-bottom:0.2rem;">✅ QA/WH นำกลับเข้าคลัง</div>
+            <div id="prodSumQaWh" style="font-size:1rem; font-weight:700; color:#34d399;">฿0</div>
+          </div>
+          <div style="flex:1; min-width:130px; background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.3); border-radius:8px; padding:0.5rem 0.75rem;">
+            <div style="font-size:0.7rem; color:#94a3b8; margin-bottom:0.2rem;">✅ ประเมิณโดย QA นำกลับ</div>
+            <div id="prodSumQa" style="font-size:1rem; font-weight:700; color:#34d399;">฿0</div>
+          </div>
+          <div style="flex:1; min-width:130px; background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); border-radius:8px; padding:0.5rem 0.75rem;">
+            <div style="font-size:0.7rem; color:#94a3b8; margin-bottom:0.2rem;">📉 สุทธิ (หักกลับเข้าคลัง)</div>
+            <div id="prodSumNet" style="font-size:1rem; font-weight:700; color:#f87171;">฿0</div>
           </div>
         </div>
         <div class="chart-container"><canvas id="barChart"></canvas></div>
@@ -507,22 +663,52 @@
 
   <!-- Modals -->
   <div id="productModal" class="modal-overlay" onclick="handleOverlayClick(event, 'productModal')">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3 style="margin:0;">รายการยาทั้งหมดที่ถูกคืน (เรียงตามมูลค่า)</h3>
-        <button class="close-btn" onclick="closeModal('productModal')">&times;</button>
+    <div class="split-modal-content" onclick="event.stopPropagation()">
+      <div class="modal-left-pane">
+        <div class="modal-header">
+          <h3 style="margin:0;">รายการยาทั้งหมดที่ถูกคืน (เรียงตามมูลค่า)</h3>
+        </div>
+        <div class="modal-body">
+          <table id="productModalTable" style="cursor: pointer;">
+            <thead>
+              <tr>
+                <th style="position: sticky; top: -24px;">สินค้า (Product Name)</th>
+                <th style="text-align:right; position: sticky; top: -24px;">มูลค่ารวม (บาท)</th>
+                <th style="text-align:right; position: sticky; top: -24px;">สัดส่วน (% ของมูลค่ารวม)</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
       </div>
-      <div class="modal-body">
-        <table id="productModalTable">
-          <thead>
-            <tr>
-              <th style="position: sticky; top: -24px;">สินค้า (Product Name)</th>
-              <th style="text-align:right; position: sticky; top: -24px;">มูลค่ารวม (บาท)</th>
-              <th style="text-align:right; position: sticky; top: -24px;">สัดส่วน (% ของมูลค่ารวม)</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
+      <div class="modal-right-pane">
+        <div class="modal-right-pane-header">
+          <h3 id="productDetailTitle" style="margin:0; color:#1e293b;">รายละเอียด</h3>
+          <div>
+            <button class="pdf-btn" style="margin-right: 1rem; background: rgba(16, 185, 129, 0.1); color: #10b981; border-color: rgba(16, 185, 129, 0.3);" onclick="exportDetailData('product')">📥 โหลด Excel (CSV)</button>
+            <button class="close-btn" onclick="closeModal('productModal')">&times;</button>
+          </div>
+        </div>
+        <div class="modal-right-pane-body">
+          <div id="productDetailPlaceholder" class="placeholder-text">👈 กรุณาคลิกเลือกรายการจากด้านซ้ายเพื่อดูรายละเอียด</div>
+          <div id="productDetailContent" style="display:none; overflow-x: auto; max-height: 100%;">
+            <table id="productDetailTable">
+              <thead>
+                <tr>
+                  <th style="white-space:nowrap; position: sticky; top: -24px;">วันที่ออกบิล</th>
+                  <th style="white-space:nowrap; position: sticky; top: -24px;">ชื่อลูกค้า</th>
+                  <th style="white-space:nowrap; position: sticky; top: -24px;">ชื่อผู้แทน</th>
+                  <th style="white-space:nowrap; position: sticky; top: -24px;">Product Name</th>
+                  <th style="white-space:nowrap; position: sticky; top: -24px;">Lot NO</th>
+                  <th style="white-space:nowrap; text-align:right; position: sticky; top: -24px;">มูลค่ารวม</th>
+                  <th style="white-space:nowrap; position: sticky; top: -24px;">สาเหตุการคืน</th>
+                  <th style="white-space:nowrap; position: sticky; top: -24px;">สถานะสุดท้าย (Flow)</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -594,48 +780,109 @@
 
   <!-- Customer Modal -->
   <div id="customerModal" class="modal-overlay" onclick="handleOverlayClick(event, 'customerModal')">
-    <div class="modal-content" style="max-width: 860px;">
-      <div class="modal-header">
-        <h3 style="margin:0;">🏆 รายชื่อลูกค้าที่คืนยา (เรียงตามมูลค่า)</h3>
-        <button class="close-btn" onclick="closeModal('customerModal')">&times;</button>
+    <div class="split-modal-content" onclick="event.stopPropagation()">
+      <div class="modal-left-pane">
+        <div class="modal-header">
+          <h3 style="margin:0;">🏆 รายชื่อลูกค้าที่คืนยา (เรียงตามมูลค่า)</h3>
+        </div>
+        <div class="modal-body">
+          <table id="customerModalTable" style="cursor: pointer;">
+            <thead>
+              <tr>
+                <th style="position: sticky; top: -24px;">#</th>
+                <th style="position: sticky; top: -24px;">ชื่อลูกค้า</th>
+                <th style="text-align:right; position: sticky; top: -24px;">จำนวนรายการ</th>
+                <th style="text-align:right; position: sticky; top: -24px;">มูลค่าคืนรวม (บาท)</th>
+                <th style="text-align:right; position: sticky; top: -24px;">สัดส่วน (%)</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
       </div>
-      <div class="modal-body">
-        <table id="customerModalTable">
-          <thead>
-            <tr>
-              <th style="position: sticky; top: -24px;">#</th>
-              <th style="position: sticky; top: -24px;">ชื่อลูกค้า</th>
-              <th style="text-align:right; position: sticky; top: -24px;">จำนวนรายการ</th>
-              <th style="text-align:right; position: sticky; top: -24px;">มูลค่าคืนรวม (บาท)</th>
-              <th style="text-align:right; position: sticky; top: -24px;">สัดส่วน (%)</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
+      <div class="modal-right-pane">
+        <div class="modal-right-pane-header">
+          <h3 id="customerDetailTitle" style="margin:0; color:#1e293b;">รายละเอียด</h3>
+          <div>
+            <button class="pdf-btn" style="margin-right: 1rem; background: rgba(16, 185, 129, 0.1); color: #10b981; border-color: rgba(16, 185, 129, 0.3);" onclick="exportDetailData('customer')">📥 โหลด Excel (CSV)</button>
+            <button class="close-btn" onclick="closeModal('customerModal')">&times;</button>
+          </div>
+        </div>
+        <div class="modal-right-pane-body">
+          <div id="customerDetailPlaceholder" class="placeholder-text">👈 กรุณาคลิกเลือกรายการจากด้านซ้ายเพื่อดูรายละเอียด</div>
+          <div id="customerDetailContent" style="display:none; overflow-x: auto; max-height: 100%;">
+            <table id="customerDetailTable">
+              <thead>
+                <tr>
+                  <th style="white-space:nowrap; position: sticky; top: -24px;">วันที่ออกบิล</th>
+                  <th style="white-space:nowrap; position: sticky; top: -24px;">ชื่อลูกค้า</th>
+                  <th style="white-space:nowrap; position: sticky; top: -24px;">ชื่อผู้แทน</th>
+                  <th style="white-space:nowrap; position: sticky; top: -24px;">Product Name</th>
+                  <th style="white-space:nowrap; position: sticky; top: -24px;">Lot NO</th>
+                  <th style="white-space:nowrap; text-align:right; position: sticky; top: -24px;">มูลค่ารวม</th>
+                  <th style="white-space:nowrap; position: sticky; top: -24px;">สาเหตุการคืน</th>
+                  <th style="white-space:nowrap; position: sticky; top: -24px;">สถานะสุดท้าย (Flow)</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 
   <!-- Sales Rep Modal -->
   <div id="salesRepModal" class="modal-overlay" onclick="handleOverlayClick(event, 'salesRepModal')">
-    <div class="modal-content" style="max-width: 860px;">
-      <div class="modal-header">
-        <h3 style="margin:0;">💼 รายชื่อผู้แทนที่มียาคืน (เรียงตามมูลค่า)</h3>
-        <button class="close-btn" onclick="closeModal('salesRepModal')">&times;</button>
+    <div class="split-modal-content" onclick="event.stopPropagation()">
+      <div class="modal-left-pane">
+        <div class="modal-header">
+          <h3 style="margin:0;">💼 รายชื่อผู้แทนที่มียาคืน (เรียงตามมูลค่า)</h3>
+        </div>
+        <div class="modal-body">
+          <table id="salesRepModalTable" style="cursor: pointer;">
+            <thead>
+              <tr>
+                <th style="position: sticky; top: -24px;">#</th>
+                <th style="position: sticky; top: -24px;">ชื่อผู้แทน</th>
+                <th style="text-align:right; position: sticky; top: -24px;">จำนวนรายการ</th>
+                <th style="text-align:right; position: sticky; top: -24px;">มูลค่าคืนรวม (บาท)</th>
+                <th style="text-align:right; position: sticky; top: -24px;">สัดส่วน (%)</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
       </div>
-      <div class="modal-body">
-        <table id="salesRepModalTable">
-          <thead>
-            <tr>
-              <th style="position: sticky; top: -24px;">#</th>
-              <th style="position: sticky; top: -24px;">ชื่อผู้แทน</th>
-              <th style="text-align:right; position: sticky; top: -24px;">จำนวนรายการ</th>
-              <th style="text-align:right; position: sticky; top: -24px;">มูลค่าคืนรวม (บาท)</th>
-              <th style="text-align:right; position: sticky; top: -24px;">สัดส่วน (%)</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
+      <div class="modal-right-pane">
+        <div class="modal-right-pane-header">
+          <h3 id="salesRepDetailTitle" style="margin:0; color:#1e293b;">รายละเอียด</h3>
+          <div>
+            <button class="pdf-btn" style="margin-right: 1rem; background: rgba(16, 185, 129, 0.1); color: #10b981; border-color: rgba(16, 185, 129, 0.3);" onclick="exportDetailData('salesRep')">📥 โหลด Excel (CSV)</button>
+            <button class="close-btn" onclick="closeModal('salesRepModal')">&times;</button>
+          </div>
+        </div>
+        <div class="modal-right-pane-body">
+          <div id="salesRepDetailPlaceholder" class="placeholder-text">👈 กรุณาคลิกเลือกรายการจากด้านซ้ายเพื่อดูรายละเอียด</div>
+          <div id="salesRepDetailContent" style="display:none; overflow-x: auto; max-height: 100%;">
+            <table id="salesRepDetailTable">
+              <thead>
+                <tr>
+                  <th style="white-space:nowrap; position: sticky; top: -24px;">วันที่ออกบิล</th>
+                  <th style="white-space:nowrap; position: sticky; top: -24px;">ชื่อลูกค้า</th>
+                  <th style="white-space:nowrap; position: sticky; top: -24px;">ชื่อผู้แทน</th>
+                  <th style="white-space:nowrap; position: sticky; top: -24px;">Product Name</th>
+                  <th style="white-space:nowrap; position: sticky; top: -24px;">Lot NO</th>
+                  <th style="white-space:nowrap; text-align:right; position: sticky; top: -24px;">มูลค่ารวม</th>
+                  <th style="white-space:nowrap; position: sticky; top: -24px;">สาเหตุการคืน</th>
+                  <th style="white-space:nowrap; position: sticky; top: -24px;">สถานะสุดท้าย (Flow)</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -759,6 +1006,97 @@
       endDate.value = '';
       renderDashboard();
     });
+
+    // --- Master-Detail Split Modal Logic ---
+    let currentDetailData = [];
+    let currentDetailType = '';
+
+    function showDetailView(type, name, rowElement) {
+      // Highlight row
+      if (rowElement) {
+        const tbody = rowElement.parentElement;
+        const rows = tbody.querySelectorAll('tr');
+        rows.forEach(r => r.classList.remove('active-row'));
+        rowElement.classList.add('active-row');
+      }
+
+      currentDetailType = type;
+      let titleElement, placeholderElement, contentElement, tbodyElement;
+
+      if (type === 'customer') {
+        currentDetailData = currentFilteredData.filter(d => d.customerName === name);
+        titleElement = document.getElementById('customerDetailTitle');
+        placeholderElement = document.getElementById('customerDetailPlaceholder');
+        contentElement = document.getElementById('customerDetailContent');
+        tbodyElement = document.querySelector('#customerDetailTable tbody');
+        titleElement.innerHTML = `รายละเอียด: <span style="color:#8b5cf6;">${name}</span>`;
+      } else if (type === 'salesRep') {
+        currentDetailData = currentFilteredData.filter(d => d.salesRep === name);
+        titleElement = document.getElementById('salesRepDetailTitle');
+        placeholderElement = document.getElementById('salesRepDetailPlaceholder');
+        contentElement = document.getElementById('salesRepDetailContent');
+        tbodyElement = document.querySelector('#salesRepDetailTable tbody');
+        titleElement.innerHTML = `รายละเอียด: <span style="color:#f43f5e;">${name}</span>`;
+      } else if (type === 'product') {
+        currentDetailData = currentFilteredData.filter(d => d.productName === name);
+        titleElement = document.getElementById('productDetailTitle');
+        placeholderElement = document.getElementById('productDetailPlaceholder');
+        contentElement = document.getElementById('productDetailContent');
+        tbodyElement = document.querySelector('#productDetailTable tbody');
+        titleElement.innerHTML = `รายละเอียด: <span style="color:#38bdf8;">${name}</span>`;
+      }
+
+      placeholderElement.style.display = 'none';
+      contentElement.style.display = 'block';
+      
+      tbodyElement.innerHTML = '';
+      currentDetailData.forEach(row => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${row.billDate || '-'}</td>
+          <td title="${row.customerName || '-'}">${(row.customerName || '-').substring(0,25)}</td>
+          <td title="${row.salesRep || '-'}">${row.salesRep || '-'}</td>
+          <td title="${row.productName || '-'}">${(row.productName || '-').substring(0,25)}</td>
+          <td>${row.lot || '-'}</td>
+          <td style="text-align:right; color:#38bdf8;">${formatCurrency(row.totalPrice || 0)}</td>
+          <td title="${row.returnReason || '-'}">${row.returnReason || '-'}</td>
+          <td><span class="${getBadgeClass(row.finalStatus || '-')}">${row.finalStatus || '-'}</span></td>
+        `;
+        tbodyElement.appendChild(tr);
+      });
+    }
+
+    function exportDetailData(type) {
+      if (!currentDetailData || currentDetailData.length === 0) {
+        showToast('ไม่มีข้อมูลให้ส่งออก', 'error');
+        return;
+      }
+      
+      let csvContent = "data:text/csv;charset=utf-8,\uFEFF";
+      csvContent += "วันที่ออกบิล,ชื่อลูกค้า,ชื่อผู้แทน,Product Name,Lot NO,มูลค่ารวม,สาเหตุการคืน,สถานะสุดท้าย\n";
+      
+      currentDetailData.forEach(row => {
+        const r = [
+          `"${row.billDate || ''}"`,
+          `"${row.customerName || ''}"`,
+          `"${row.salesRep || ''}"`,
+          `"${row.productName || ''}"`,
+          `"${row.lot || ''}"`,
+          `"${row.totalPrice || 0}"`,
+          `"${row.returnReason || ''}"`,
+          `"${row.finalStatus || ''}"`
+        ];
+        csvContent += r.join(',') + "\n";
+      });
+      
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", `Detail_Export_${type}_${new Date().getTime()}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
 
     // --- Modals ---
     function openModal(id) {
@@ -971,12 +1309,36 @@
       const lotNeoca = new Set(filtered.filter(d => d.company === 'Neoca').map(d => d.lot).filter(l => l && l !== '-')).size;
       const lotProsp = new Set(filtered.filter(d => d.company === 'Prosp').map(d => d.lot).filter(l => l && l !== '-')).size;
       
+      const passKeywords = ['ผ่าน','pass','ok','approve','คืนคลัง','นำกลับ','รับคืน','เข้าคลัง'];
+      
+      const qaWhReturn = filtered.filter(d => passKeywords.some(k => (d.qaWh || '').toLowerCase().includes(k))).reduce((sum, d) => sum + (d.totalPrice || 0), 0);
+      const qaWhNeoca = filtered.filter(d => d.company === 'Neoca' && passKeywords.some(k => (d.qaWh || '').toLowerCase().includes(k))).reduce((sum, d) => sum + (d.totalPrice || 0), 0);
+      const qaWhProsp = filtered.filter(d => d.company === 'Prosp' && passKeywords.some(k => (d.qaWh || '').toLowerCase().includes(k))).reduce((sum, d) => sum + (d.totalPrice || 0), 0);
 
+      const qaReturn = filtered.filter(d => passKeywords.some(k => (d.qaResult || '').toLowerCase().includes(k))).reduce((sum, d) => sum + (d.totalPrice || 0), 0);
+      const qaNeoca = filtered.filter(d => d.company === 'Neoca' && passKeywords.some(k => (d.qaResult || '').toLowerCase().includes(k))).reduce((sum, d) => sum + (d.totalPrice || 0), 0);
+      const qaProsp = filtered.filter(d => d.company === 'Prosp' && passKeywords.some(k => (d.qaResult || '').toLowerCase().includes(k))).reduce((sum, d) => sum + (d.totalPrice || 0), 0);
+
+      const netValue = totalValue - (qaWhReturn + qaReturn);
+      const netNeoca = valNeoca - (qaWhNeoca + qaNeoca);
+      const netProsp = valProsp - (qaWhProsp + qaProsp);
 
       // Update UI Cards
       document.getElementById('sumValue').innerText = formatCurrency(totalValue);
       document.getElementById('valNeoca').innerText = 'Neoca: ' + formatCurrency(valNeoca);
       document.getElementById('valProsp').innerText = 'Prosp: ' + formatCurrency(valProsp);
+
+      document.getElementById('sumNetValue').innerText = formatCurrency(netValue);
+      document.getElementById('netNeoca').innerText = 'Neoca: ' + formatCurrency(netNeoca);
+      document.getElementById('netProsp').innerText = 'Prosp: ' + formatCurrency(netProsp);
+
+      document.getElementById('sumQaWhReturn').innerText = formatCurrency(qaWhReturn);
+      document.getElementById('qaWhNeoca').innerText = 'Neoca: ' + formatCurrency(qaWhNeoca);
+      document.getElementById('qaWhProsp').innerText = 'Prosp: ' + formatCurrency(qaWhProsp);
+
+      document.getElementById('sumQaReturn').innerText = formatCurrency(qaReturn);
+      document.getElementById('qaNeoca').innerText = 'Neoca: ' + formatCurrency(qaNeoca);
+      document.getElementById('qaProsp').innerText = 'Prosp: ' + formatCurrency(qaProsp);
 
       document.getElementById('sumRows').innerText = uniqueBillsCount.toLocaleString() + ' รายการ';
       document.getElementById('billNeoca').innerText = 'Neoca: ' + billNeoca.toLocaleString();
@@ -1022,6 +1384,8 @@
       const overallReasonProspMap = {};
       const monthlyMapNeoca = {};
       const monthlyMapProsp = {};
+      const monthlyMapNetNeoca = {};
+      const monthlyMapNetProsp = {};
       const monthDateMap = {};
       
       filtered.forEach(d => {
@@ -1032,12 +1396,23 @@
         if (d.company === 'Neoca') overallReasonNeocaMap[d.returnReason] = (overallReasonNeocaMap[d.returnReason] || 0) + 1;
         if (d.company === 'Prosp') overallReasonProspMap[d.returnReason] = (overallReasonProspMap[d.returnReason] || 0) + 1;
 
+        let isQaWh = passKeywords.some(k => (d.qaWh || '').toLowerCase().includes(k));
+        let isQaResult = passKeywords.some(k => (d.qaResult || '').toLowerCase().includes(k));
+        let qaValue = (isQaWh ? (d.totalPrice || 0) : 0) + (isQaResult ? (d.totalPrice || 0) : 0);
+        let netPrice = (d.totalPrice || 0) - qaValue;
+
         if (d.monthStr && d.monthStr !== 'Unknown') {
           if (!monthDateMap[d.monthStr]) {
             monthDateMap[d.monthStr] = d.returnMonthMs || 0;
           }
-          if (d.company === 'Neoca') monthlyMapNeoca[d.monthStr] = (monthlyMapNeoca[d.monthStr] || 0) + (d.totalPrice || 0);
-          if (d.company === 'Prosp') monthlyMapProsp[d.monthStr] = (monthlyMapProsp[d.monthStr] || 0) + (d.totalPrice || 0);
+          if (d.company === 'Neoca') {
+            monthlyMapNeoca[d.monthStr] = (monthlyMapNeoca[d.monthStr] || 0) + (d.totalPrice || 0);
+            monthlyMapNetNeoca[d.monthStr] = (monthlyMapNetNeoca[d.monthStr] || 0) + netPrice;
+          }
+          if (d.company === 'Prosp') {
+            monthlyMapProsp[d.monthStr] = (monthlyMapProsp[d.monthStr] || 0) + (d.totalPrice || 0);
+            monthlyMapNetProsp[d.monthStr] = (monthlyMapNetProsp[d.monthStr] || 0) + netPrice;
+          }
         }
       });
 
@@ -1070,15 +1445,35 @@
       
       const monthlyNeocaVals = allMonthsToDisplay.map(m => monthlyMapNeoca[m] || 0);
       const monthlyProspVals = allMonthsToDisplay.map(m => monthlyMapProsp[m] || 0);
-      drawGroupedBarChartValue('monthlyChart', allMonthsToDisplay, monthlyNeocaVals, monthlyProspVals, 'x', true);
+      const monthlyNetNeocaVals = allMonthsToDisplay.map(m => monthlyMapNetNeoca[m] || 0);
+      const monthlyNetProspVals = allMonthsToDisplay.map(m => monthlyMapNetProsp[m] || 0);
+      drawGroupedBarChartValue('monthlyChart', allMonthsToDisplay, monthlyNeocaVals, monthlyProspVals, monthlyNetNeocaVals, monthlyNetProspVals, 'x', true);
 
       // Top Products Chart
       const prodFiltered = filtered.filter(d => d.company === activeChartFilter.barChart);
       const prodMap = {};
-      prodFiltered.forEach(d => { prodMap[d.productName] = (prodMap[d.productName] || 0) + d.totalPrice; });
-      const sortedProds = Object.keys(prodMap).map(k => ({name:k, val:prodMap[k]})).sort((a,b)=>b.val-a.val).slice(0, 10);
+      const prodQaWhMap = {};
+      const prodQaMap = {};
+      prodFiltered.forEach(d => { 
+        prodMap[d.productName] = (prodMap[d.productName] || 0) + d.totalPrice; 
+        if (passKeywords.some(k => (d.qaWh || '').toLowerCase().includes(k))) prodQaWhMap[d.productName] = (prodQaWhMap[d.productName] || 0) + (d.totalPrice || 0);
+        if (passKeywords.some(k => (d.qaResult || '').toLowerCase().includes(k))) prodQaMap[d.productName] = (prodQaMap[d.productName] || 0) + (d.totalPrice || 0);
+      });
+      const sortedProds = Object.keys(prodMap)
+        .map(k => ({name:k, val:prodMap[k], qaWh: prodQaWhMap[k]||0, qa: prodQaMap[k]||0, net: prodMap[k] - ((prodQaWhMap[k]||0) + (prodQaMap[k]||0))}))
+        .sort((a,b)=>b.val-a.val)
+        .slice(0, 10);
       const colorProd = activeChartFilter.barChart === 'Neoca' ? '#38bdf8' : '#10b981';
-      drawBarChartValue('barChart', sortedProds.map(p=>p.name), sortedProds.map(p=>p.val), 'y', colorProd);
+      // Update product summary bar
+      const prodTop10Total = sortedProds.reduce((s,d) => s+d.val, 0);
+      const prodTop10QaWh = sortedProds.reduce((s,d) => s+d.qaWh, 0);
+      const prodTop10Qa = sortedProds.reduce((s,d) => s+d.qa, 0);
+      const prodTop10Net = sortedProds.reduce((s,d) => s+d.net, 0);
+      document.getElementById('prodSumTotal').innerText = formatCurrency(prodTop10Total);
+      document.getElementById('prodSumQaWh').innerText = formatCurrency(prodTop10QaWh);
+      document.getElementById('prodSumQa').innerText = formatCurrency(prodTop10Qa);
+      document.getElementById('prodSumNet').innerText = formatCurrency(prodTop10Net);
+      drawBarChartValue('barChart', sortedProds, 'y', colorProd);
 
       // Top Reasons Chart
       const reasonFiltered = filtered.filter(d => d.company === activeChartFilter.reasonChart);
@@ -1091,35 +1486,61 @@
       // Top 10 Customers Chart
       const custMap = {};
       const custCountMap = {};
+      const custQaWhMap = {};
+      const custQaMap = {};
       filtered.forEach(d => {
         if (d.customerName && d.customerName !== '-') {
           custMap[d.customerName] = (custMap[d.customerName] || 0) + (d.totalPrice || 0);
           custCountMap[d.customerName] = (custCountMap[d.customerName] || 0) + 1;
+          if (passKeywords.some(k => (d.qaWh || '').toLowerCase().includes(k))) custQaWhMap[d.customerName] = (custQaWhMap[d.customerName] || 0) + (d.totalPrice || 0);
+          if (passKeywords.some(k => (d.qaResult || '').toLowerCase().includes(k))) custQaMap[d.customerName] = (custQaMap[d.customerName] || 0) + (d.totalPrice || 0);
         }
       });
       const totalCustValue = Object.values(custMap).reduce((s,v) => s+v, 0) || 1;
       const sortedCusts = Object.keys(custMap)
-        .map(k => ({ name: k, val: custMap[k], count: custCountMap[k] }))
+        .map(k => ({ name: k, val: custMap[k], count: custCountMap[k], qaWh: custQaWhMap[k]||0, qa: custQaMap[k]||0, net: custMap[k] - ((custQaWhMap[k]||0) + (custQaMap[k]||0)) }))
         .sort((a,b) => b.val - a.val)
         .slice(0, 10);
       customerChartData = sortedCusts;
+      // Update customer summary bar
+      const custTop10Total = sortedCusts.reduce((s,d) => s+d.val, 0);
+      const custTop10QaWh = sortedCusts.reduce((s,d) => s+d.qaWh, 0);
+      const custTop10Qa = sortedCusts.reduce((s,d) => s+d.qa, 0);
+      const custTop10Net = sortedCusts.reduce((s,d) => s+d.net, 0);
+      document.getElementById('custSumTotal').innerText = formatCurrency(custTop10Total);
+      document.getElementById('custSumQaWh').innerText = formatCurrency(custTop10QaWh);
+      document.getElementById('custSumQa').innerText = formatCurrency(custTop10Qa);
+      document.getElementById('custSumNet').innerText = formatCurrency(custTop10Net);
       drawCustomerChart('customerChart', sortedCusts, totalCustValue);
 
       // Top 10 Sales Reps Chart
       const repMap = {};
       const repCountMap = {};
+      const repQaWhMap = {};
+      const repQaMap = {};
       filtered.forEach(d => {
         if (d.salesRep && d.salesRep !== '-') {
           repMap[d.salesRep] = (repMap[d.salesRep] || 0) + (d.totalPrice || 0);
           repCountMap[d.salesRep] = (repCountMap[d.salesRep] || 0) + 1;
+          if (passKeywords.some(k => (d.qaWh || '').toLowerCase().includes(k))) repQaWhMap[d.salesRep] = (repQaWhMap[d.salesRep] || 0) + (d.totalPrice || 0);
+          if (passKeywords.some(k => (d.qaResult || '').toLowerCase().includes(k))) repQaMap[d.salesRep] = (repQaMap[d.salesRep] || 0) + (d.totalPrice || 0);
         }
       });
       const totalRepValue = Object.values(repMap).reduce((s,v) => s+v, 0) || 1;
       const sortedReps = Object.keys(repMap)
-        .map(k => ({ name: k, val: repMap[k], count: repCountMap[k] }))
+        .map(k => ({ name: k, val: repMap[k], count: repCountMap[k], qaWh: repQaWhMap[k]||0, qa: repQaMap[k]||0, net: repMap[k] - ((repQaWhMap[k]||0) + (repQaMap[k]||0)) }))
         .sort((a,b) => b.val - a.val)
         .slice(0, 10);
       salesRepChartData = sortedReps;
+      // Update sales rep summary bar
+      const repTop10Total = sortedReps.reduce((s,d) => s+d.val, 0);
+      const repTop10QaWh = sortedReps.reduce((s,d) => s+d.qaWh, 0);
+      const repTop10Qa = sortedReps.reduce((s,d) => s+d.qa, 0);
+      const repTop10Net = sortedReps.reduce((s,d) => s+d.net, 0);
+      document.getElementById('repSumTotal').innerText = formatCurrency(repTop10Total);
+      document.getElementById('repSumQaWh').innerText = formatCurrency(repTop10QaWh);
+      document.getElementById('repSumQa').innerText = formatCurrency(repTop10Qa);
+      document.getElementById('repSumNet').innerText = formatCurrency(repTop10Net);
       drawSalesRepChart('salesRepChart', sortedReps, totalRepValue);
 
       // Update Top Reason Card Breakdowns
@@ -1153,6 +1574,8 @@
       sortedProds.forEach(p => {
         const percent = totalAllValue > 0 ? ((p.val / totalAllValue) * 100).toFixed(2) : 0;
         const tr = document.createElement('tr');
+        tr.className = 'clickable-row';
+        tr.onclick = function() { showDetailView('product', p.name, this); };
         tr.innerHTML = `
           <td>${p.name}</td>
           <td style="text-align:right; color:#38bdf8;">${formatCurrency(p.val)}</td>
@@ -1232,6 +1655,8 @@
       sorted.forEach((c, i) => {
         const pct = totalVal > 0 ? ((c.val / totalVal) * 100).toFixed(2) : 0;
         const tr = document.createElement('tr');
+        tr.className = 'clickable-row';
+        tr.onclick = function() { showDetailView('customer', c.name, this); };
         const rankColor = i === 0 ? '#f59e0b' : i === 1 ? '#94a3b8' : i === 2 ? '#cd7c2f' : '#64748b';
         const rankIcon = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i+1}`;
         tr.innerHTML = `
@@ -1281,9 +1706,14 @@
               tooltip.innerHTML = `
                 <div class="tooltip-rank">${rankIcon}</div>
                 <div class="tooltip-name">${d.name}</div>
-                <div class="tooltip-value">${formatCurrency(d.val)}</div>
-                <div class="tooltip-pct">🎯 สัดส่วน: ${pct}% ของมูลค่ารวม</div>
-                <div class="tooltip-items">📋 จำนวนรายการ: ${d.count.toLocaleString()} รายการ</div>
+                <div class="tooltip-value" style="color: #8b5cf6;">${formatCurrency(d.val)}</div>
+                <div class="tooltip-pct">📊 สัดส่วน: ${pct}% ของมูลค่ารวม</div>
+                <div class="tooltip-items">📦 จำนวนรายการ: ${d.count ? d.count.toLocaleString() : '-'} รายการ</div>
+                <div style="margin-top:0.5rem; font-size:0.75rem; border-top:1px solid #e2e8f0; padding-top:0.5rem;">
+                  <div style="color:#10b981;">✅ มูลค่า QA/WH นำกลับเข้าคลัง: ${formatCurrency(d.qaWh)}</div>
+                  <div style="color:#10b981;">✅ มูลค่าการคืน ที่ประเมิณโดย QA: ${formatCurrency(d.qa)}</div>
+                  <div style="color:#ef4444; font-weight:bold;">📉 หักกลับเข้าคลัง (สุทธิ): ${formatCurrency(d.net)}</div>
+                </div>
               `;
               const rect = document.getElementById(canvasId).getBoundingClientRect();
               let tx = event.native.clientX + 20;
@@ -1353,6 +1783,8 @@
     sorted.forEach((c, i) => {
       const pct = totalVal > 0 ? ((c.val / totalVal) * 100).toFixed(2) : 0;
       const tr = document.createElement('tr');
+      tr.className = 'clickable-row';
+      tr.onclick = function() { showDetailView('salesRep', c.name, this); };
       const rankColor = i === 0 ? '#f59e0b' : i === 1 ? '#94a3b8' : i === 2 ? '#cd7c2f' : '#64748b';
       const rankIcon = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i+1}`;
       tr.innerHTML = `
@@ -1403,8 +1835,13 @@
               <div class="tooltip-rank">${rankIcon}</div>
               <div class="tooltip-name">${d.name}</div>
               <div class="tooltip-value" style="color: #f43f5e;">${formatCurrency(d.val)}</div>
-              <div class="tooltip-pct">🎯 สัดส่วน: ${pct}% ของมูลค่ารวม</div>
-              <div class="tooltip-items">📋 จำนวนรายการ: ${d.count.toLocaleString()} รายการ</div>
+              <div class="tooltip-pct">📊 สัดส่วน: ${pct}% ของมูลค่ารวม</div>
+              <div class="tooltip-items">📦 จำนวนรายการ: ${d.count ? d.count.toLocaleString() : '-'} รายการ</div>
+              <div style="margin-top:0.5rem; font-size:0.75rem; border-top:1px solid #e2e8f0; padding-top:0.5rem;">
+                <div style="color:#10b981;">✅ มูลค่า QA/WH นำกลับเข้าคลัง: ${formatCurrency(d.qaWh)}</div>
+                <div style="color:#10b981;">✅ มูลค่าการคืน ที่ประเมิณโดย QA: ${formatCurrency(d.qa)}</div>
+                <div style="color:#ef4444; font-weight:bold;">📉 หักกลับเข้าคลัง (สุทธิ): ${formatCurrency(d.net)}</div>
+              </div>
             `;
             const rect = document.getElementById(canvasId).getBoundingClientRect();
             let tx = event.native.clientX + 20;
@@ -1482,9 +1919,18 @@
       });
     }
 
-    function drawGroupedBarChartValue(canvasId, labels, dataNeoca, dataProsp, axis, flatX = false) {
+    function drawGroupedBarChartValue(canvasId, labels, dataNeoca, dataProsp, netNeoca, netProsp, axis, flatX = false) {
       if (charts[canvasId]) charts[canvasId].destroy();
       const ctx = document.getElementById(canvasId).getContext('2d');
+      
+      let tooltip = document.getElementById(canvasId + 'Tooltip');
+      if (!tooltip) {
+        tooltip = document.createElement('div');
+        tooltip.id = canvasId + 'Tooltip';
+        tooltip.className = 'custom-tooltip';
+        document.body.appendChild(tooltip);
+      }
+
       charts[canvasId] = new Chart(ctx, {
         type: 'bar',
         data: {
@@ -1499,7 +1945,42 @@
           responsive: true,
           maintainAspectRatio: false,
           layout: { padding: axis === 'y' ? { right: 70 } : { top: 30 } },
+          onHover: (event, elements) => {
+            if (elements.length > 0) {
+              const idx = elements[0].index;
+              const datasetIdx = elements[0].datasetIndex;
+              const label = labels[idx];
+              const monthTotal = (dataNeoca[idx] || 0) + (dataProsp[idx] || 0);
+              const monthNetTotal = (netNeoca[idx] || 0) + (netProsp[idx] || 0);
+              
+              tooltip.innerHTML = `
+                <div class="tooltip-name" style="margin-bottom:0.3rem;">📅 เดือน: ${label}</div>
+                <div style="font-size:0.75rem; color:#64748b; margin-bottom:0.4rem; padding-bottom:0.4rem; border-bottom:1px solid #e2e8f0;">
+                  <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#38bdf8; margin-right:4px;"></span>Neoca: ${formatCurrency(dataNeoca[idx]||0)}<br>
+                  <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#10b981; margin-right:4px;"></span>Prosp: ${formatCurrency(dataProsp[idx]||0)}
+                </div>
+                <div class="tooltip-value" style="color: #0f172a; margin-top:0.25rem;">💰 คืนรวมทั้งเดือน: ${formatCurrency(monthTotal)}</div>
+                <div style="margin-top:0.35rem; font-size:0.75rem;">
+                  <div style="color:#ef4444; font-weight:bold;">📉 หักกลับเข้าคลัง (สุทธิ): ${formatCurrency(monthNetTotal)}</div>
+                </div>
+              `;
+              const rect = document.getElementById(canvasId).getBoundingClientRect();
+              let tx = event.native.clientX + 20;
+              let ty = event.native.clientY - 20;
+              if (tx + 250 > window.innerWidth) tx = event.native.clientX - 270;
+              tooltip.style.left = tx + 'px';
+              tooltip.style.top = ty + 'px';
+              tooltip.style.display = 'block';
+              tooltip.style.opacity = '1';
+              document.getElementById(canvasId).style.cursor = 'pointer';
+            } else {
+              tooltip.style.opacity = '0';
+              setTimeout(() => { if (tooltip.style.opacity === '0') tooltip.style.display = 'none'; }, 150);
+              document.getElementById(canvasId).style.cursor = 'default';
+            }
+          },
           plugins: {
+            tooltip: { enabled: false },
             legend: { position: 'top', align: 'end', labels: { boxWidth: 12, font: { size: 11, color: '#94a3b8' } } },
             datalabels: {
               anchor: 'end',
@@ -1515,11 +1996,30 @@
           }
         }
       });
+
+      // Hide tooltip when mouse leaves canvas
+      document.getElementById(canvasId).addEventListener('mouseleave', () => {
+        tooltip.style.opacity = '0';
+        setTimeout(() => { tooltip.style.display = 'none'; }, 150);
+      }, { passive: true });
     }
 
-    function drawBarChartValue(canvasId, labels, data, axis, color) {
+    function drawBarChartValue(canvasId, dataObjs, axis, color) {
       if (charts[canvasId]) charts[canvasId].destroy();
       const ctx = document.getElementById(canvasId).getContext('2d');
+      
+      let tooltip = document.getElementById(canvasId + 'Tooltip');
+      if (!tooltip) {
+        tooltip = document.createElement('div');
+        tooltip.id = canvasId + 'Tooltip';
+        tooltip.className = 'custom-tooltip';
+        document.body.appendChild(tooltip);
+      }
+
+      const labels = dataObjs.map(d => d.name.length > 28 ? d.name.slice(0,28)+'…' : d.name);
+      const data = dataObjs.map(d => d.val);
+      const totalValue = data.reduce((s, v) => s + v, 0) || 1;
+
       charts[canvasId] = new Chart(ctx, {
         type: 'bar',
         data: {
@@ -1531,6 +2031,44 @@
           responsive: true,
           maintainAspectRatio: false,
           layout: { padding: axis === 'y' ? { right: 70 } : { top: 30 } },
+          onHover: (event, elements) => {
+            if (elements.length > 0) {
+              const idx = elements[0].index;
+              const d = dataObjs[idx];
+              const pct = totalValue > 0 ? ((d.val / totalValue) * 100).toFixed(2) : 0;
+              const rankIcon = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `อันดับ ${idx+1}`;
+              tooltip.innerHTML = `
+                <div class="tooltip-rank">${rankIcon}</div>
+                <div class="tooltip-name">${d.name}</div>
+                <div class="tooltip-value" style="color: ${color};">${formatCurrency(d.val)}</div>
+                <div class="tooltip-pct">📊 สัดส่วน: ${pct}% ของ Top 10 นี้</div>
+                <div style="margin-top:0.5rem; font-size:0.75rem; border-top:1px solid #e2e8f0; padding-top:0.5rem;">
+                  <div style="color:#10b981;">✅ มูลค่า QA/WH นำกลับเข้าคลัง: ${formatCurrency(d.qaWh)}</div>
+                  <div style="color:#10b981;">✅ มูลค่าการคืน ที่ประเมิณโดย QA: ${formatCurrency(d.qa)}</div>
+                  <div style="color:#ef4444; font-weight:bold;">📉 หักกลับเข้าคลัง (สุทธิ): ${formatCurrency(d.net)}</div>
+                </div>
+              `;
+              const rect = document.getElementById(canvasId).getBoundingClientRect();
+              let tx = event.native.clientX + 20;
+              let ty = event.native.clientY - 20;
+              if (tx + 250 > window.innerWidth) tx = event.native.clientX - 270;
+              tooltip.style.left = tx + 'px';
+              tooltip.style.top = ty + 'px';
+              tooltip.style.display = 'block';
+              tooltip.style.opacity = '1';
+              document.getElementById(canvasId).style.cursor = 'pointer';
+            } else {
+              tooltip.style.opacity = '0';
+              setTimeout(() => { if (tooltip.style.opacity === '0') tooltip.style.display = 'none'; }, 150);
+              document.getElementById(canvasId).style.cursor = 'default';
+            }
+          },
+          onClick: (event, elements) => {
+            if (elements.length > 0) {
+              event.native.stopPropagation();
+              if(canvasId === 'barChart') openModal('productModal');
+            }
+          },
           plugins: {
             legend: { display: false },
             datalabels: {
@@ -1547,6 +2085,12 @@
           }
         }
       });
+
+      // Hide tooltip when mouse leaves canvas
+      document.getElementById(canvasId).addEventListener('mouseleave', () => {
+        tooltip.style.opacity = '0';
+        setTimeout(() => { tooltip.style.display = 'none'; }, 150);
+      }, { passive: true });
     }
 
     function drawBarChartPercent(canvasId, labels, data, totalOverall, axis, color) {
