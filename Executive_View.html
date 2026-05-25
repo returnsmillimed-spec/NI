@@ -160,20 +160,27 @@
       padding: 1.25rem;
       box-shadow: 0 1px 6px rgba(0,0,0,0.04);
     }
-    table.exec-table { width: 100%; border-collapse: collapse; font-size: 0.83rem; }
+    table.exec-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
     table.exec-table th {
-      background: #f1f5f9;
-      color: var(--text-sub);
-      font-weight: 700;
-      padding: 0.5rem 0.75rem;
+      background: #f8fafc;
+      color: var(--primary);
+      font-weight: 800;
+      padding: 0.7rem 0.85rem;
       text-align: left;
-      font-size: 0.75rem;
+      font-size: 0.8rem;
       text-transform: uppercase;
-      letter-spacing: 0.3px;
+      letter-spacing: 0.5px;
+      border-bottom: 2px solid #e2e8f0;
     }
-    table.exec-table td { padding: 0.55rem 0.75rem; border-bottom: 1px solid #f1f5f9; color: var(--text); }
+    table.exec-table td { 
+      padding: 0.7rem 0.85rem; 
+      border-bottom: 1px solid #f1f5f9; 
+      color: var(--text); 
+      vertical-align: middle;
+    }
+    table.exec-table tr:nth-child(even) { background-color: #fcfcfc; }
     table.exec-table tr:last-child td { border-bottom: none; }
-    table.exec-table tr:hover td { background: #f8fafc; }
+    table.exec-table tr:hover td { background: #f1f5f9; }
     .rank-num { font-weight: 800; color: var(--accent); }
     .rank-1 { color: #d97706; }
     .rank-2 { color: #94a3b8; }
@@ -272,7 +279,6 @@
         <p>Returned Medicines Executive Summary Report</p>
       </div>
       <div class="report-meta">
-        <strong id="reportPeriod">—</strong><br>
         วันที่จัดทำ: <span id="reportDate">—</span><br>
         บริษัท: Neoca &amp; Prosp
       </div>
@@ -288,26 +294,47 @@
     </div>
 
     <!-- KPI Cards -->
+    <!-- KPI Cards (Financials) -->
     <div class="kpi-grid">
-      <div class="kpi-card danger">
-        <div class="kpi-label">มูลค่าคืนยารวม</div>
+      <div class="kpi-card warning">
+        <div class="kpi-label">มูลค่าการคืนยารวม</div>
         <div class="kpi-value big" id="kpiTotalVal">—</div>
         <div class="kpi-trend" id="kpiTrend">—</div>
       </div>
-      <div class="kpi-card">
-        <div class="kpi-label">จำนวนใบคืน (Bill)</div>
-        <div class="kpi-value" id="kpiBills">—</div>
-        <div class="kpi-sub">รายการยาทั้งหมด: <span id="kpiRows">—</span> รายการ</div>
-      </div>
-      <div class="kpi-card warning">
-        <div class="kpi-label">สาเหตุหลักที่คืน</div>
-        <div class="kpi-value big" id="kpiTopReason">—</div>
-        <div class="kpi-sub" id="kpiTopReasonPct">—</div>
+      <div class="kpi-card danger">
+        <div class="kpi-label">มูลค่าคืนสุทธิ (หักเข้าคลัง)</div>
+        <div class="kpi-value big" id="kpiNetVal">—</div>
+        <div class="kpi-trend trend-flat">ยอดสุทธิที่ต้องติดตาม</div>
       </div>
       <div class="kpi-card success">
-        <div class="kpi-label">ผ่าน QA (นำกลับได้)</div>
-        <div class="kpi-value" id="kpiQaPass">—</div>
-        <div class="kpi-sub" id="kpiQaPassPct">—</div>
+        <div class="kpi-label">มูลค่า QA/WH นำกลับเข้าคลัง</div>
+        <div class="kpi-value big" id="kpiQaWhVal">—</div>
+        <div class="kpi-sub" id="kpiQaWhPct">—</div>
+      </div>
+      <div class="kpi-card success">
+        <div class="kpi-label">มูลค่าที่ประเมินโดย QA นำกลับ</div>
+        <div class="kpi-value big" id="kpiQaVal">—</div>
+        <div class="kpi-sub" id="kpiQaPct">—</div>
+      </div>
+    </div>
+
+    <!-- Operations Overview -->
+    <div class="two-col" style="grid-template-columns: 1fr 1fr; margin-bottom: 1.5rem;">
+      <div class="panel" style="display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <div class="kpi-label">จำนวนใบคืน (Bill No.)</div>
+          <div class="kpi-value" id="kpiBills">—</div>
+          <div class="kpi-sub">จากรายการยาทั้งหมด: <span id="kpiRows" style="font-weight:bold; color:var(--accent);">—</span> รายการ</div>
+        </div>
+        <div style="font-size:3rem; opacity:0.1;">📄</div>
+      </div>
+      <div class="panel" style="display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <div class="kpi-label">สาเหตุหลักที่คืนยา</div>
+          <div class="kpi-value" id="kpiTopReason" style="font-size: 1.4rem; color:var(--warning);">—</div>
+          <div class="kpi-sub" id="kpiTopReasonPct">—</div>
+        </div>
+        <div style="font-size:3rem; opacity:0.1;">⚠️</div>
       </div>
     </div>
 
@@ -353,7 +380,7 @@
         <div class="section-title">สาเหตุหลักในการคืนยา (Top 10)</div>
         <table class="exec-table">
           <thead>
-            <tr><th>#</th><th>สาเหตุ</th><th style="text-align:right;">มูลค่า</th><th>สัดส่วน</th></tr>
+            <tr><th>#</th><th>สาเหตุ</th><th style="text-align:right;">มูลค่ารวม</th><th style="text-align:right;">สุทธิ (หักเข้าคลัง)</th><th>สัดส่วน (สุทธิ)</th></tr>
           </thead>
           <tbody id="reasonTableBody"></tbody>
         </table>
@@ -372,7 +399,7 @@
         <div class="section-title">🏆 10 ลูกค้าที่คืนยามูลค่าสูงสุด (ต้องติดตาม)</div>
         <table class="exec-table">
           <thead>
-            <tr><th>#</th><th>ชื่อลูกค้า</th><th>มูลค่า</th><th>%</th></tr>
+            <tr><th>#</th><th>ชื่อลูกค้า</th><th style="text-align:right;">มูลค่ารวม</th><th style="text-align:right;">สุทธิ (หักเข้าคลัง)</th><th>สัดส่วน (สุทธิ)</th></tr>
           </thead>
           <tbody id="custTableBody"></tbody>
         </table>
@@ -381,7 +408,7 @@
         <div class="section-title">💼 10 ผู้แทนที่มียาคืนมูลค่าสูงสุด (ต้อง Coaching)</div>
         <table class="exec-table">
           <thead>
-            <tr><th>#</th><th>ชื่อผู้แทน</th><th>มูลค่า</th><th>%</th></tr>
+            <tr><th>#</th><th>ชื่อผู้แทน</th><th style="text-align:right;">มูลค่ารวม</th><th style="text-align:right;">สุทธิ (หักเข้าคลัง)</th><th>สัดส่วน (สุทธิ)</th></tr>
           </thead>
           <tbody id="repTableBody"></tbody>
         </table>
@@ -481,34 +508,61 @@
       document.getElementById('reportDate').textContent = now.toLocaleDateString('th-TH', {year:'numeric',month:'long',day:'numeric'});
       document.getElementById('printDate').textContent = now.toLocaleDateString('th-TH', {year:'numeric',month:'long',day:'numeric'});
 
-      // ---- KPI: Total ----
-      const totalVal = data.reduce((s,d) => s + d.totalPrice, 0);
-      const totalBills = new Set(data.map(d => d.billNo).filter(Boolean)).size;
+      // ---- KPI: Total and Financials ----
+      const passKeywords = ['ผ่าน','pass','ok','approve','คืนคลัง','นำกลับ'];
+      
+      let totalVal = 0;
+      let qaWhVal = 0;
+      let qaResultVal = 0;
+      let totalBillsSet = new Set();
+      
+      data.forEach(d => {
+        totalVal += d.totalPrice;
+        if (d.billNo) totalBillsSet.add(d.billNo);
+        
+        let isQaWh = passKeywords.some(k => (d.qaWh || '').toLowerCase().includes(k));
+        let isQaResult = passKeywords.some(k => (d.qaResult || '').toLowerCase().includes(k));
+        
+        if (isQaWh) qaWhVal += d.totalPrice;
+        if (isQaResult) qaResultVal += d.totalPrice;
+      });
+      
+      let netVal = totalVal - (qaWhVal + qaResultVal);
+      const totalBills = totalBillsSet.size;
+
       document.getElementById('kpiTotalVal').textContent = fmtShort(totalVal);
+      document.getElementById('kpiNetVal').textContent = fmtShort(netVal);
+      document.getElementById('kpiQaWhVal').textContent = fmtShort(qaWhVal);
+      document.getElementById('kpiQaVal').textContent = fmtShort(qaResultVal);
+      
+      document.getElementById('kpiQaWhPct').textContent = `${((qaWhVal/totalVal)*100).toFixed(1)}% ของมูลค่ารวม`;
+      document.getElementById('kpiQaPct').textContent = `${((qaResultVal/totalVal)*100).toFixed(1)}% ของมูลค่ารวม`;
+
       document.getElementById('kpiBills').textContent = totalBills.toLocaleString();
       document.getElementById('kpiRows').textContent = data.length.toLocaleString();
 
       // ---- Months ----
       const monthMap = {};
       data.forEach(d => {
-        if (!monthMap[d.monthStr]) monthMap[d.monthStr] = 0;
-        monthMap[d.monthStr] += d.totalPrice;
+        if (!monthMap[d.monthStr]) monthMap[d.monthStr] = {val: 0, qaWh: 0, qa: 0};
+        monthMap[d.monthStr].val += d.totalPrice;
+        let isQaWh = passKeywords.some(k => (d.qaWh || '').toLowerCase().includes(k));
+        let isQaResult = passKeywords.some(k => (d.qaResult || '').toLowerCase().includes(k));
+        if (isQaWh) monthMap[d.monthStr].qaWh += d.totalPrice;
+        if (isQaResult) monthMap[d.monthStr].qa += d.totalPrice;
       });
       const sortedMonths = Object.keys(monthMap).filter(m => m !== 'Unknown').sort((a,b) => monthToSortKey(a) - monthToSortKey(b));
       const latestMonth = sortedMonths[sortedMonths.length - 1] || '—';
       const prevMonth = sortedMonths[sortedMonths.length - 2] || null;
 
-      document.getElementById('reportPeriod').textContent = `ข้อมูล ณ เดือน ${latestMonth}`;
-
       // Trend KPI
       if (prevMonth) {
-        const currVal = monthMap[latestMonth] || 0;
-        const prevVal = monthMap[prevMonth] || 0;
+        const currVal = monthMap[latestMonth].val || 0;
+        const prevVal = monthMap[prevMonth].val || 0;
         const delta = prevVal > 0 ? ((currVal - prevVal) / prevVal * 100) : 0;
         const trendEl = document.getElementById('kpiTrend');
         if (delta > 0) {
           trendEl.innerHTML = `<span class="trend-up">▲ ${delta.toFixed(1)}% จากเดือนก่อน (${prevMonth})</span>`;
-          // Show alert if jumped > 20%
           if (delta > 20) {
             document.getElementById('alertBanner').style.display = 'flex';
             document.getElementById('alertTitle').textContent = `⚠️ มูลค่าคืนยาเดือน ${latestMonth} เพิ่มขึ้น ${delta.toFixed(1)}% — ต้องตรวจสอบเร่งด่วน!`;
@@ -542,45 +596,61 @@
       if (last3.length === 0) {
         trendHtml = '<p style="color:#94a3b8;font-size:0.85rem;">ไม่มีข้อมูล</p>';
       } else {
-        const maxVal = Math.max(...last3.map(m => monthMap[m] || 0)) || 1;
+        const maxVal = Math.max(...last3.map(m => monthMap[m].val || 0)) || 1;
         last3.forEach((m, i) => {
-          const v = monthMap[m] || 0;
+          const v = monthMap[m].val || 0;
+          const net = v - (monthMap[m].qaWh + monthMap[m].qa);
           const w = Math.round((v/maxVal)*100);
           const isLatest = i === last3.length - 1;
           trendHtml += `
             <div class="donut-row" style="margin-bottom:0.65rem;">
               <div class="donut-label" style="${isLatest ? 'font-weight:700;color:#0f172a;' : ''}">${m}</div>
-              <div class="donut-bar-bg">
-                <div class="donut-bar-fill" style="width:${w}%; background:${colors[i]};"></div>
+              <div class="donut-bar-bg" style="display:flex; flex-direction:column; background:transparent; height:auto; overflow:visible;">
+                <div style="font-size:0.75rem; color:var(--text-sub); display:flex; justify-content:space-between; margin-bottom:4px;">
+                  <span>รวม: ${fmtShort(v)}</span>
+                  <span style="color:#dc2626; font-weight:bold;">สุทธิ: ${fmtShort(net)}</span>
+                </div>
+                <div style="height:10px; width:100%; background:#e2e8f0; border-radius:99px; overflow:hidden;">
+                  <div class="donut-bar-fill" style="width:${w}%; background:${colors[i]};"></div>
+                </div>
               </div>
-              <div class="donut-pct" style="${isLatest ? 'color:#dc2626;font-weight:800;' : ''}">${fmtShort(v)}</div>
             </div>`;
         });
         if (last3.length >= 2) {
-          const prev = monthMap[last3[last3.length-2]] || 0;
-          const curr = monthMap[last3[last3.length-1]] || 0;
-          const d = prev > 0 ? ((curr-prev)/prev*100) : 0;
+          const prevNet = monthMap[last3[last3.length-2]].val - (monthMap[last3[last3.length-2]].qaWh + monthMap[last3[last3.length-2]].qa);
+          const currNet = monthMap[last3[last3.length-1]].val - (monthMap[last3[last3.length-1]].qaWh + monthMap[last3[last3.length-1]].qa);
+          const d = prevNet > 0 ? ((currNet-prevNet)/prevNet*100) : 0;
           const arrow = d >= 0 ? '▲' : '▼';
           const cls = d >= 0 ? 'color:#dc2626' : 'color:#16a34a';
-          trendHtml += `<div style="text-align:right; font-size:0.8rem; margin-top:0.5rem; ${cls}; font-weight:700;">${arrow} ${Math.abs(d).toFixed(1)}% MoM</div>`;
+          trendHtml += `<div style="text-align:right; font-size:0.8rem; margin-top:0.5rem; ${cls}; font-weight:700;">ยอดสุทธิ ${arrow} ${Math.abs(d).toFixed(1)}% MoM</div>`;
         }
       }
       document.getElementById('trendRows').innerHTML = trendHtml;
 
       // ---- Top 10 Reasons ----
       const reasonMap = {};
-      data.forEach(d => { if (d.returnReason && d.returnReason !== '-') reasonMap[d.returnReason] = (reasonMap[d.returnReason]||0)+d.totalPrice; });
-      const sortedReasons = Object.keys(reasonMap).map(k => ({name:k, val:reasonMap[k]})).sort((a,b) => b.val-a.val);
-      const totalReasons = sortedReasons.reduce((s,r) => s+r.val, 0) || 1;
+      data.forEach(d => { 
+        if (d.returnReason && d.returnReason !== '-') {
+          if(!reasonMap[d.returnReason]) reasonMap[d.returnReason] = {val:0, qaWh:0, qa:0};
+          reasonMap[d.returnReason].val += d.totalPrice;
+          if (passKeywords.some(k => (d.qaWh||'').toLowerCase().includes(k))) reasonMap[d.returnReason].qaWh += d.totalPrice;
+          if (passKeywords.some(k => (d.qaResult||'').toLowerCase().includes(k))) reasonMap[d.returnReason].qa += d.totalPrice;
+        }
+      });
+      const sortedReasons = Object.keys(reasonMap).map(k => ({
+        name: k, val: reasonMap[k].val, net: reasonMap[k].val - (reasonMap[k].qaWh + reasonMap[k].qa)
+      })).sort((a,b) => b.net - a.net);
+      const totalNetReasons = sortedReasons.reduce((s,r) => s+r.net, 0) || 1;
       document.getElementById('kpiTopReason').textContent = sortedReasons[0]?.name.slice(0,20) || '—';
-      document.getElementById('kpiTopReasonPct').textContent = sortedReasons[0] ? `${((sortedReasons[0].val/totalReasons)*100).toFixed(1)}% ของมูลค่าสาเหตุทั้งหมด` : '—';
+      document.getElementById('kpiTopReasonPct').textContent = sortedReasons[0] ? `${((sortedReasons[0].net/totalNetReasons)*100).toFixed(1)}% ของยอดสุทธิสาเหตุทั้งหมด` : '—';
       let rBody = '';
       sortedReasons.slice(0,10).forEach((r, i) => {
-        const pct = ((r.val/totalReasons)*100).toFixed(1);
+        const pct = ((r.net/totalNetReasons)*100).toFixed(1);
         rBody += `<tr>
           <td class="${rankClass(i)}">${rankIcon(i)}</td>
           <td title="${r.name}">${r.name.length > 35 ? r.name.slice(0,35)+'…' : r.name}</td>
-          <td style="text-align:right; font-weight:700;">${fmt(r.val)}</td>
+          <td style="text-align:right; color:var(--text-sub);">${fmt(r.val)}</td>
+          <td style="text-align:right; font-weight:700; color:#dc2626;">${fmt(r.net)}</td>
           <td><span class="pct-badge">${pct}%</span></td>
         </tr>`;
       });
@@ -593,16 +663,12 @@
       const sortedQa = Object.keys(qaMap).map(k => ({name:k, val:qaMap[k]})).sort((a,b) => b.val-a.val);
       const qaColors = ['#2563eb','#16a34a','#d97706','#dc2626','#7c3aed','#0891b2'];
 
-      // Find pass-type
-      const passKeywords = ['ผ่าน','pass','ok','approve','คืนคลัง','นำกลับ'];
       let passVal = 0;
       sortedQa.forEach(q => {
         const lower = q.name.toLowerCase();
         if (passKeywords.some(k => lower.includes(k))) { passVal += q.val; }
       });
       const passPct = (passVal/totalQa*100).toFixed(1);
-      document.getElementById('kpiQaPass').textContent = fmtShort(passVal);
-      document.getElementById('kpiQaPassPct').textContent = `${passPct}% ของมูลค่ายาคืนทั้งหมด`;
 
       let qaHtml = '';
       sortedQa.slice(0,6).forEach((q, i) => {
@@ -614,57 +680,76 @@
             <div class="donut-bar-bg">
               <div class="donut-bar-fill" style="width:${w}%;background:${qaColors[i]};"></div>
             </div>
-            <div class="donut-pct" style="color:${qaColors[i]};font-weight:700;">${pct}%</div>
+            <div class="donut-pct" style="color:${qaColors[i]};font-weight:700; width:90px; text-align:right;">${fmtShort(q.val)}<br><span style="font-size:0.7rem;">(${pct}%)</span></div>
           </div>`;
       });
       document.getElementById('qaRows').innerHTML = qaHtml;
 
       // ---- Top 10 Customers ----
       const custMap = {};
-      data.forEach(d => { if (d.customerName && d.customerName !== '-') custMap[d.customerName] = (custMap[d.customerName]||0)+d.totalPrice; });
-      const sortedCust = Object.keys(custMap).map(k => ({name:k, val:custMap[k]})).sort((a,b) => b.val-a.val);
-      const totalCust = sortedCust.reduce((s,c) => s+c.val, 0) || 1;
+      data.forEach(d => { 
+        if (d.customerName && d.customerName !== '-') {
+          if(!custMap[d.customerName]) custMap[d.customerName] = {val:0, qaWh:0, qa:0};
+          custMap[d.customerName].val += d.totalPrice;
+          if (passKeywords.some(k => (d.qaWh||'').toLowerCase().includes(k))) custMap[d.customerName].qaWh += d.totalPrice;
+          if (passKeywords.some(k => (d.qaResult||'').toLowerCase().includes(k))) custMap[d.customerName].qa += d.totalPrice;
+        }
+      });
+      const sortedCust = Object.keys(custMap).map(k => ({
+        name: k, val: custMap[k].val, net: custMap[k].val - (custMap[k].qaWh + custMap[k].qa)
+      })).sort((a,b) => b.net - a.net);
+      const totalNetCust = sortedCust.reduce((s,c) => s+c.net, 0) || 1;
       let cBody = '';
       sortedCust.slice(0,10).forEach((c, i) => {
-        const pct = ((c.val/totalCust)*100).toFixed(1);
+        const pct = ((c.net/totalNetCust)*100).toFixed(1);
         cBody += `<tr>
           <td class="${rankClass(i)}">${rankIcon(i)}</td>
           <td title="${c.name}">${c.name.length>30?c.name.slice(0,30)+'…':c.name}</td>
-          <td class="val-purple" style="text-align:right;">${fmt(c.val)}</td>
+          <td style="text-align:right; color:var(--text-sub);">${fmt(c.val)}</td>
+          <td class="val-purple" style="text-align:right; color:#dc2626;">${fmt(c.net)}</td>
           <td><span class="pct-badge">${pct}%</span></td>
         </tr>`;
       });
-      document.getElementById('custTableBody').innerHTML = cBody || '<tr><td colspan="4" style="text-align:center;color:#94a3b8;padding:1rem;">ไม่มีข้อมูล</td></tr>';
+      document.getElementById('custTableBody').innerHTML = cBody || '<tr><td colspan="5" style="text-align:center;color:#94a3b8;padding:1rem;">ไม่มีข้อมูล</td></tr>';
 
       // ---- Top 10 Sales Reps ----
       const repMap = {};
-      data.forEach(d => { if (d.salesRep && d.salesRep !== '-') repMap[d.salesRep] = (repMap[d.salesRep]||0)+d.totalPrice; });
-      const sortedRep = Object.keys(repMap).map(k => ({name:k, val:repMap[k]})).sort((a,b) => b.val-a.val);
-      const totalRep = sortedRep.reduce((s,r) => s+r.val, 0) || 1;
+      data.forEach(d => { 
+        if (d.salesRep && d.salesRep !== '-') {
+          if(!repMap[d.salesRep]) repMap[d.salesRep] = {val:0, qaWh:0, qa:0};
+          repMap[d.salesRep].val += d.totalPrice;
+          if (passKeywords.some(k => (d.qaWh||'').toLowerCase().includes(k))) repMap[d.salesRep].qaWh += d.totalPrice;
+          if (passKeywords.some(k => (d.qaResult||'').toLowerCase().includes(k))) repMap[d.salesRep].qa += d.totalPrice;
+        }
+      });
+      const sortedRep = Object.keys(repMap).map(k => ({
+        name: k, val: repMap[k].val, net: repMap[k].val - (repMap[k].qaWh + repMap[k].qa)
+      })).sort((a,b) => b.net - a.net);
+      const totalNetRep = sortedRep.reduce((s,r) => s+r.net, 0) || 1;
       let rRepBody = '';
       sortedRep.slice(0,10).forEach((r, i) => {
-        const pct = ((r.val/totalRep)*100).toFixed(1);
+        const pct = ((r.net/totalNetRep)*100).toFixed(1);
         rRepBody += `<tr>
           <td class="${rankClass(i)}">${rankIcon(i)}</td>
           <td title="${r.name}">${r.name.length>30?r.name.slice(0,30)+'…':r.name}</td>
-          <td class="val-red" style="text-align:right;">${fmt(r.val)}</td>
+          <td style="text-align:right; color:var(--text-sub);">${fmt(r.val)}</td>
+          <td class="val-red" style="text-align:right; color:#dc2626;">${fmt(r.net)}</td>
           <td><span class="pct-badge">${pct}%</span></td>
         </tr>`;
       });
-      document.getElementById('repTableBody').innerHTML = rRepBody || '<tr><td colspan="4" style="text-align:center;color:#94a3b8;padding:1rem;">ไม่มีข้อมูล (กรุณา Sync ข้อมูลก่อน)</td></tr>';
+      document.getElementById('repTableBody').innerHTML = rRepBody || '<tr><td colspan="5" style="text-align:center;color:#94a3b8;padding:1rem;">ไม่มีข้อมูล (กรุณา Sync ข้อมูลก่อน)</td></tr>';
 
       // ---- Insight ----
       const insights = [];
-      const totalValM = totalVal;
-      if (sortedReasons[0]) insights.push(`สาเหตุหลักที่ทำให้เกิดยาคืนคือ <strong>"${sortedReasons[0].name}"</strong> คิดเป็น ${((sortedReasons[0].val/totalReasons)*100).toFixed(1)}% — ควรเร่งสอบสวนและออกมาตรการป้องกัน`);
+      if (sortedReasons[0]) insights.push(`สาเหตุหลักที่ทำให้เกิดยอดสุทธิยาคืนสูงที่สุดคือ <strong>"${sortedReasons[0].name}"</strong> คิดเป็น ${((sortedReasons[0].net/totalNetReasons)*100).toFixed(1)}% ของยอดสุทธิรวม — ควรเร่งสอบสวนและออกมาตรการป้องกัน`);
       if (neocaPct > prospPct) {
-        insights.push(`Neoca มีสัดส่วนมูลค่าคืนยา <strong>${neocaPct.toFixed(1)}%</strong> ซึ่งสูงกว่า Prosp — ควรทบทวนกระบวนการเซลล์และการตรวจสอบก่อนส่ง`);
+        insights.push(`Neoca มีสัดส่วนมูลค่าคืนยารวม <strong>${neocaPct.toFixed(1)}%</strong> ซึ่งสูงกว่า Prosp — ควรทบทวนกระบวนการเซลล์และการตรวจสอบก่อนส่ง`);
       } else {
-        insights.push(`Prosp มีสัดส่วนมูลค่าคืนยา <strong>${prospPct.toFixed(1)}%</strong> ซึ่งสูงกว่า Neoca — ควรทบทวนกระบวนการเซลล์และการตรวจสอบก่อนส่ง`);
+        insights.push(`Prosp มีสัดส่วนมูลค่าคืนยารวม <strong>${prospPct.toFixed(1)}%</strong> ซึ่งสูงกว่า Neoca — ควรทบทวนกระบวนการเซลล์และการตรวจสอบก่อนส่ง`);
       }
-      if (sortedCust[0]) insights.push(`ลูกค้า <strong>"${sortedCust[0].name}"</strong> มีมูลค่าคืนยาสูงสุดที่ ${fmtShort(sortedCust[0].val)} — ควรนัดประชุมเพื่อวิเคราะห์สาเหตุและวางแผนร่วมกัน`);
-      if (sortedRep[0]) insights.push(`ผู้แทน <strong>"${sortedRep[0].name}"</strong> มียาคืนมูลค่าสูงสุดที่ ${fmtShort(sortedRep[0].val)} — ควรจัดโปรแกรม Coaching เพื่อพัฒนาทักษะการขาย`);
-      if (parseFloat(passPct) < 50) insights.push(`ยาที่ผ่านการประเมิน QA มีสัดส่วนน้อยกว่า 50% — ควรตรวจสอบกระบวนการเก็บและขนส่งสินค้า`);
+      if (sortedCust[0]) insights.push(`ลูกค้า <strong>"${sortedCust[0].name}"</strong> มียอดสุทธิคืนยาสูงสุดที่ ${fmtShort(sortedCust[0].net)} — ควรนัดประชุมเพื่อวิเคราะห์สาเหตุและหาข้อตกลงร่วมกัน`);
+      if (sortedRep[0]) insights.push(`ผู้แทน <strong>"${sortedRep[0].name}"</strong> มียอดสุทธิยาคืนสูงสุดที่ ${fmtShort(sortedRep[0].net)} — ควรจัดโปรแกรม Coaching เพื่อพัฒนาทักษะการขายและลดการคืนยา`);
+      if (parseFloat(passPct) < 50) insights.push(`ยาที่ผ่านการประเมิน QA (นำกลับเข้าคลังได้) มีสัดส่วนน้อยกว่า 50% — ควรตรวจสอบกระบวนการเก็บและขนส่งสินค้า`);
 
       document.getElementById('insightList').innerHTML = insights.map(i => `<li>${i}</li>`).join('');
     }
