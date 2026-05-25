@@ -316,8 +316,9 @@
         <div class="kpi-value big" id="kpiNetVal" style="color:#dc2626;">—</div>
         <div class="kpi-trend trend-flat" style="margin-bottom: 0.5rem;">ยอดสุทธิที่ต้องติดตาม</div>
         <div style="font-size: 0.75rem; color: #475569; display: flex; justify-content: space-around; border-top: 1px solid rgba(239, 68, 68, 0.2); padding-top: 0.5rem;">
-          <div>ทำลาย: <strong id="kpiNetDestroy" style="color:#dc2626;">—</strong></div>
-          <div>หมดอายุ: <strong id="kpiNetExpire" style="color:#f59e0b;">—</strong></div>
+          <div>ทำลาย: <strong id="kpiNetDestroy" style="color:#dc2626;">฿0</strong></div>
+          <div>หมดอายุ: <strong id="kpiNetExpire" style="color:#f59e0b;">฿0</strong></div>
+          <div>อื่นๆ: <strong id="kpiNetOther" style="color:#64748b;">฿0</strong></div>
         </div>
       </div>
       <div class="kpi-card success" style="background: rgba(16, 185, 129, 0.05); border: 1px solid #10b981; border-left-width: 5px;">
@@ -534,6 +535,7 @@
       let qaResultVal = 0;
       let netDestroy = 0;
       let netExpire = 0;
+      let netOther = 0;
       let totalBillsSet = new Set();
       
       const expireKeywords = ['หมดอายุ', 'expire'];
@@ -553,6 +555,7 @@
           const txt = (d.returnReason + ' ' + d.qaResult + ' ' + d.finalStatus).toLowerCase();
           if (destroyKeywords.some(k => txt.includes(k))) netDestroy += d.totalPrice;
           else if (expireKeywords.some(k => txt.includes(k))) netExpire += d.totalPrice;
+          else netOther += d.totalPrice;
         }
       });
       
@@ -564,6 +567,7 @@
       const totalQaPct = totalVal > 0 ? ((qaCombinedVal / totalVal) * 100).toFixed(1) : 0;
       const destroyPct = netVal > 0 ? ((netDestroy / netVal) * 100).toFixed(1) : 0;
       const expirePct = netVal > 0 ? ((netExpire / netVal) * 100).toFixed(1) : 0;
+      const otherPct = netVal > 0 ? ((netOther / netVal) * 100).toFixed(1) : 0;
       const qaWhPct = qaCombinedVal > 0 ? ((qaWhVal / qaCombinedVal) * 100).toFixed(1) : 0;
       const qaPct = qaCombinedVal > 0 ? ((qaResultVal / qaCombinedVal) * 100).toFixed(1) : 0;
 
@@ -574,6 +578,7 @@
       document.getElementById('kpiNetVal').textContent = fmtShort(netVal);
       document.getElementById('kpiNetDestroy').textContent = `${fmtShort(netDestroy)} (${destroyPct}%)`;
       document.getElementById('kpiNetExpire').textContent = `${fmtShort(netExpire)} (${expirePct}%)`;
+      document.getElementById('kpiNetOther').textContent = `${fmtShort(netOther)} (${otherPct}%)`;
 
       document.getElementById('kpiQaCombinedVal').textContent = fmtShort(qaCombinedVal);
       document.getElementById('kpiQaWhPctText').textContent = `${fmtShort(qaWhVal)} (${qaWhPct}%)`;
