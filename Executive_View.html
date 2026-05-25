@@ -295,26 +295,44 @@
 
     <!-- KPI Cards -->
     <!-- KPI Cards (Financials) -->
-    <div class="kpi-grid">
-      <div class="kpi-card warning">
-        <div class="kpi-label">มูลค่าการคืนยารวม</div>
-        <div class="kpi-value big" id="kpiTotalVal">—</div>
-        <div class="kpi-trend" id="kpiTrend">—</div>
+    <div class="kpi-grid" style="grid-template-columns: repeat(3, 1fr);">
+      <div class="kpi-card" style="border-left-color: #f59e0b; background: rgba(245, 158, 11, 0.05);">
+        <div class="kpi-label" style="color:#d97706; font-weight:bold;">มูลค่าการคืนยารวม</div>
+        <div class="kpi-value big" id="kpiTotalVal" style="color:#b45309;">—</div>
+        <div class="kpi-trend" id="kpiTrend" style="margin-bottom:0.5rem;">—</div>
+        <div style="font-size: 0.75rem; color: #475569; display: flex; flex-direction:column; gap: 0.35rem; border-top: 1px solid rgba(245, 158, 11, 0.2); padding-top: 0.5rem; margin-top:0.5rem;">
+          <div style="display:flex; justify-content:space-between;">
+            <span style="color:#dc2626; font-weight:bold;">📉 ยาคืนเสีย:</span>
+            <strong id="kpiTotalNet" style="color:#dc2626;">—</strong>
+          </div>
+          <div style="display:flex; justify-content:space-between;">
+            <span style="color:#059669; font-weight:bold;">📦 นำกลับเข้าคลัง:</span>
+            <strong id="kpiTotalQa" style="color:#059669;">—</strong>
+          </div>
+        </div>
       </div>
-      <div class="kpi-card danger">
-        <div class="kpi-label">มูลค่าคืนสุทธิ (หักเข้าคลัง)</div>
-        <div class="kpi-value big" id="kpiNetVal">—</div>
-        <div class="kpi-trend trend-flat">ยอดสุทธิที่ต้องติดตาม</div>
+      <div class="kpi-card danger" style="background: rgba(239, 68, 68, 0.1); border: 2px solid #ef4444; border-left-width: 5px;">
+        <div class="kpi-label" style="color:#ef4444; font-weight:bold;">ยาคืนเสีย</div>
+        <div class="kpi-value big" id="kpiNetVal" style="color:#dc2626;">—</div>
+        <div class="kpi-trend trend-flat" style="margin-bottom: 0.5rem;">ยอดสุทธิที่ต้องติดตาม</div>
+        <div style="font-size: 0.75rem; color: #475569; display: flex; justify-content: space-around; border-top: 1px solid rgba(239, 68, 68, 0.2); padding-top: 0.5rem;">
+          <div>ทำลาย: <strong id="kpiNetDestroy" style="color:#dc2626;">—</strong></div>
+          <div>หมดอายุ: <strong id="kpiNetExpire" style="color:#f59e0b;">—</strong></div>
+        </div>
       </div>
-      <div class="kpi-card success">
-        <div class="kpi-label">มูลค่า QA/WH นำกลับเข้าคลัง</div>
-        <div class="kpi-value big" id="kpiQaWhVal">—</div>
-        <div class="kpi-sub" id="kpiQaWhPct">—</div>
-      </div>
-      <div class="kpi-card success">
-        <div class="kpi-label">มูลค่าที่ประเมินโดย QA นำกลับ</div>
-        <div class="kpi-value big" id="kpiQaVal">—</div>
-        <div class="kpi-sub" id="kpiQaPct">—</div>
+      <div class="kpi-card success" style="background: rgba(16, 185, 129, 0.05); border: 1px solid #10b981; border-left-width: 5px;">
+        <div class="kpi-label" style="color:#059669; font-weight:bold;">นำกลับเข้าคลัง (QA & WH)</div>
+        <div class="kpi-value big" id="kpiQaCombinedVal" style="color:#059669;">—</div>
+        <div style="font-size: 0.75rem; color: #475569; display: flex; flex-direction:column; gap: 0.35rem; border-top: 1px solid #e2e8f0; padding-top: 0.5rem; margin-top:0.5rem;">
+          <div style="display:flex; justify-content:space-between;">
+            <span>QA/WH นำกลับ:</span>
+            <strong id="kpiQaWhPctText" style="color:#059669;">—</strong>
+          </div>
+          <div style="display:flex; justify-content:space-between;">
+            <span>ประเมินโดย QA นำกลับ:</span>
+            <strong id="kpiQaPctText" style="color:#059669;">—</strong>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -514,7 +532,12 @@
       let totalVal = 0;
       let qaWhVal = 0;
       let qaResultVal = 0;
+      let netDestroy = 0;
+      let netExpire = 0;
       let totalBillsSet = new Set();
+      
+      const expireKeywords = ['หมดอายุ', 'expire'];
+      const destroyKeywords = ['ทำลาย', 'destroy', 'ทิ้ง'];
       
       data.forEach(d => {
         totalVal += d.totalPrice;
@@ -525,18 +548,36 @@
         
         if (isQaWh) qaWhVal += d.totalPrice;
         if (isQaResult) qaResultVal += d.totalPrice;
+        
+        if (!isQaWh && !isQaResult) {
+          const txt = (d.returnReason + ' ' + d.qaResult + ' ' + d.finalStatus).toLowerCase();
+          if (destroyKeywords.some(k => txt.includes(k))) netDestroy += d.totalPrice;
+          else if (expireKeywords.some(k => txt.includes(k))) netExpire += d.totalPrice;
+        }
       });
       
       let netVal = totalVal - (qaWhVal + qaResultVal);
+      let qaCombinedVal = qaWhVal + qaResultVal;
       const totalBills = totalBillsSet.size;
 
+      const totalNetPct = totalVal > 0 ? ((netVal / totalVal) * 100).toFixed(1) : 0;
+      const totalQaPct = totalVal > 0 ? ((qaCombinedVal / totalVal) * 100).toFixed(1) : 0;
+      const destroyPct = netVal > 0 ? ((netDestroy / netVal) * 100).toFixed(1) : 0;
+      const expirePct = netVal > 0 ? ((netExpire / netVal) * 100).toFixed(1) : 0;
+      const qaWhPct = qaCombinedVal > 0 ? ((qaWhVal / qaCombinedVal) * 100).toFixed(1) : 0;
+      const qaPct = qaCombinedVal > 0 ? ((qaResultVal / qaCombinedVal) * 100).toFixed(1) : 0;
+
       document.getElementById('kpiTotalVal').textContent = fmtShort(totalVal);
+      document.getElementById('kpiTotalNet').textContent = `${fmtShort(netVal)} (${totalNetPct}%)`;
+      document.getElementById('kpiTotalQa').textContent = `${fmtShort(qaCombinedVal)} (${totalQaPct}%)`;
+
       document.getElementById('kpiNetVal').textContent = fmtShort(netVal);
-      document.getElementById('kpiQaWhVal').textContent = fmtShort(qaWhVal);
-      document.getElementById('kpiQaVal').textContent = fmtShort(qaResultVal);
-      
-      document.getElementById('kpiQaWhPct').textContent = `${((qaWhVal/totalVal)*100).toFixed(1)}% ของมูลค่ารวม`;
-      document.getElementById('kpiQaPct').textContent = `${((qaResultVal/totalVal)*100).toFixed(1)}% ของมูลค่ารวม`;
+      document.getElementById('kpiNetDestroy').textContent = `${fmtShort(netDestroy)} (${destroyPct}%)`;
+      document.getElementById('kpiNetExpire').textContent = `${fmtShort(netExpire)} (${expirePct}%)`;
+
+      document.getElementById('kpiQaCombinedVal').textContent = fmtShort(qaCombinedVal);
+      document.getElementById('kpiQaWhPctText').textContent = `${fmtShort(qaWhVal)} (${qaWhPct}%)`;
+      document.getElementById('kpiQaPctText').textContent = `${fmtShort(qaResultVal)} (${qaPct}%)`;
 
       document.getElementById('kpiBills').textContent = totalBills.toLocaleString();
       document.getElementById('kpiRows').textContent = data.length.toLocaleString();
