@@ -387,36 +387,49 @@
 
     <!-- Summary Cards -->
     <div class="grid-4">
-      <div class="glass card color-amber">
-        <h4>มูลค่าการคืนรวม</h4>
-        <h2 id="sumValue">฿0</h2>
-        <div class="card-breakdown">
+      <div class="glass card color-amber" style="background: rgba(245, 158, 11, 0.1); border: 2px solid #f59e0b;">
+        <h4 style="color:#d97706; font-weight:bold;">มูลค่าการคืนรวม</h4>
+        <h2 id="sumValue" style="color:#b45309;">฿0</h2>
+        <div class="card-breakdown" style="flex-wrap:wrap; gap:0.5rem; justify-content:center; margin-bottom: 0.5rem;">
           <span class="badge-neoca" id="valNeoca">Neoca: ฿0</span>
           <span class="badge-prosp" id="valProsp">Prosp: ฿0</span>
         </div>
+        <div style="font-size: 0.75rem; color: #475569; display: flex; flex-direction:column; gap: 0.35rem; border-top: 1px solid rgba(245, 158, 11, 0.2); padding-top: 0.5rem; margin-top:0.5rem;">
+          <div style="display:flex; justify-content:space-between;">
+            <span style="color:#dc2626; font-weight:bold;">📉 ยาคืนเสีย:</span>
+            <strong id="sumValueTotalNet" style="color:#dc2626;">฿0 (0%)</strong>
+          </div>
+          <div style="display:flex; justify-content:space-between;">
+            <span style="color:#059669; font-weight:bold;">📦 นำกลับเข้าคลัง:</span>
+            <strong id="sumValueTotalQa" style="color:#059669;">฿0 (0%)</strong>
+          </div>
+        </div>
       </div>
-      <div class="glass card color-rose">
-        <h4>มูลค่าการคืนทั้งหมด (หักกลับเข้าคลัง)</h4>
-        <h2 id="sumNetValue">฿0</h2>
-        <div class="card-breakdown">
+      <div class="glass card color-rose" style="background: rgba(239, 68, 68, 0.1); border: 2px solid #ef4444; cursor: pointer; position: relative; transition: transform 0.2s, box-shadow 0.2s;" onclick="openModal('netModal')" onmouseover="this.style.transform='scale(1.02)'; this.style.boxShadow='0 10px 15px -3px rgba(239, 68, 68, 0.2)'" onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='none'">
+        <div style="position: absolute; top: 0.5rem; right: 0.5rem; color: #ef4444; font-size: 0.7rem; background: rgba(239, 68, 68, 0.15); padding: 0.2rem 0.4rem; border-radius: 4px; border: 1px solid rgba(239,68,68,0.3);">👆 คลิกเจาะลึกข้อมูลทั้งหมด</div>
+        <h4 style="color:#ef4444; font-weight:bold;">ยาคืนเสีย</h4>
+        <h2 id="sumNetValue" style="color:#dc2626;">฿0</h2>
+        <div class="card-breakdown" style="flex-wrap:wrap; gap:0.5rem; justify-content:center; margin-bottom: 0.5rem;">
           <span class="badge-neoca" id="netNeoca">Neoca: ฿0</span>
           <span class="badge-prosp" id="netProsp">Prosp: ฿0</span>
         </div>
-      </div>
-      <div class="glass card color-emerald">
-        <h4>มูลค่า QA/WH นำกลับเข้าคลัง</h4>
-        <h2 id="sumQaWhReturn">฿0</h2>
-        <div class="card-breakdown">
-          <span class="badge-neoca" id="qaWhNeoca">Neoca: ฿0</span>
-          <span class="badge-prosp" id="qaWhProsp">Prosp: ฿0</span>
+        <div style="font-size: 0.75rem; color: #475569; display: flex; justify-content: space-around; border-top: 1px solid rgba(239, 68, 68, 0.2); padding-top: 0.5rem;">
+          <div title="คำนวณจากคีย์เวิร์ด ทำลาย, ทิ้ง">ทำลาย: <strong id="netDestroy" style="color:#dc2626;">฿0 (0%)</strong></div>
+          <div title="คำนวณจากคีย์เวิร์ด หมดอายุ, expire">หมดอายุ: <strong id="netExpire" style="color:#f59e0b;">฿0 (0%)</strong></div>
         </div>
       </div>
-      <div class="glass card color-emerald">
-        <h4>มูลค่าการคืน ที่ประเมิณโดย QA (นำเข้าคลัง)</h4>
-        <h2 id="sumQaReturn">฿0</h2>
-        <div class="card-breakdown">
-          <span class="badge-neoca" id="qaNeoca">Neoca: ฿0</span>
-          <span class="badge-prosp" id="qaProsp">Prosp: ฿0</span>
+      <div class="glass card color-emerald" style="background: rgba(16, 185, 129, 0.05); border: 1px solid #10b981;">
+        <h4 style="color:#059669; font-weight:bold;">นำกลับเข้าคลัง (QA & WH)</h4>
+        <h2 id="sumQaCombined">฿0</h2>
+        <div style="font-size: 0.75rem; color: #475569; display: flex; flex-direction:column; gap: 0.35rem; border-top: 1px solid #e2e8f0; padding-top: 0.5rem; margin-top:0.5rem;">
+          <div style="display:flex; justify-content:space-between;">
+            <span>QA/WH นำกลับ:</span>
+            <strong id="sumQaWhReturnText" style="color:#059669;">฿0 (0%)</strong>
+          </div>
+          <div style="display:flex; justify-content:space-between;">
+            <span>ประเมินโดย QA นำกลับ:</span>
+            <strong id="sumQaReturnText" style="color:#059669;">฿0 (0%)</strong>
+          </div>
         </div>
       </div>
     </div>
@@ -886,9 +899,84 @@
     </div>
   </div>
 
+  <!-- Net Return Details Modal -->
+  <div id="netModal" class="modal-overlay" onclick="handleOverlayClick(event, 'netModal')">
+    <div class="modal-content" style="max-width: 1200px; padding: 2rem;" onclick="event.stopPropagation()">
+      <div class="modal-header" style="margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center;">
+        <h2 style="margin:0; color:#dc2626;">📉 เจาะลึกข้อมูล "ยาคืนเสีย" (สุทธิ)</h2>
+        <div style="display: flex; align-items: center;">
+          <button class="pdf-btn" style="margin-right: 1.5rem; background: rgba(16, 185, 129, 0.1); color: #10b981; border-color: rgba(16, 185, 129, 0.3);" onclick="exportNetData()">📥 โหลด Excel (CSV)</button>
+          <button class="close-btn" onclick="closeModal('netModal')">&times;</button>
+        </div>
+      </div>
+      <div class="modal-body" style="padding: 0;">
+        <p style="margin-top: 0; margin-bottom: 1.5rem; color: #475569;">รายการทั้งหมด (เรียงตามมูลค่ายาคืนเสีย จากมากไปน้อย)</p>
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.5rem;">
+          
+          <!-- Top 10 Reps by Net -->
+          <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+            <h3 style="margin-top:0; color:#1e293b; font-size:1.1rem; display:flex; justify-content:space-between; align-items:center;">
+              <span>💼 ผู้แทน</span>
+              <span style="font-size:0.75rem; background:#fee2e2; color:#ef4444; padding:0.2rem 0.4rem; border-radius:4px; font-weight:normal;">ทั้งหมด</span>
+            </h3>
+            <div style="max-height: 500px; overflow-y: auto; padding-right: 0.25rem;">
+              <table id="netRepTable" style="width:100%; text-align:left; font-size:0.85rem; border-collapse:collapse;">
+                <thead>
+                  <tr style="border-bottom:2px solid #cbd5e1; position: sticky; top: 0; background: #f8fafc;">
+                    <th style="padding-bottom:0.5rem; width:20px;">#</th>
+                    <th style="padding-bottom:0.5rem;">ชื่อผู้แทน</th>
+                    <th style="text-align:right; padding-bottom:0.5rem;">มูลค่าสุทธิ (บาท)</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
 
+          <!-- Top 10 Customers by Net -->
+          <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+            <h3 style="margin-top:0; color:#1e293b; font-size:1.1rem; display:flex; justify-content:space-between; align-items:center;">
+              <span>🏆 ลูกค้า</span>
+              <span style="font-size:0.75rem; background:#fee2e2; color:#ef4444; padding:0.2rem 0.4rem; border-radius:4px; font-weight:normal;">ทั้งหมด</span>
+            </h3>
+            <div style="max-height: 500px; overflow-y: auto; padding-right: 0.25rem;">
+              <table id="netCustTable" style="width:100%; text-align:left; font-size:0.85rem; border-collapse:collapse;">
+                <thead>
+                  <tr style="border-bottom:2px solid #cbd5e1; position: sticky; top: 0; background: #f8fafc;">
+                    <th style="padding-bottom:0.5rem; width:20px;">#</th>
+                    <th style="padding-bottom:0.5rem;">ชื่อลูกค้า</th>
+                    <th style="text-align:right; padding-bottom:0.5rem;">มูลค่าสุทธิ (บาท)</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
 
-  <!-- Customer Detail Tooltip -->
+          <!-- Top 10 Products by Net -->
+          <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+            <h3 style="margin-top:0; color:#1e293b; font-size:1.1rem; display:flex; justify-content:space-between; align-items:center;">
+              <span>💊 ยาคืนสูงสุด</span>
+              <span style="font-size:0.75rem; background:#fee2e2; color:#ef4444; padding:0.2rem 0.4rem; border-radius:4px; font-weight:normal;">ทั้งหมด</span>
+            </h3>
+            <div style="max-height: 500px; overflow-y: auto; padding-right: 0.25rem;">
+              <table id="netProdTable" style="width:100%; text-align:left; font-size:0.85rem; border-collapse:collapse;">
+                <thead>
+                  <tr style="border-bottom:2px solid #cbd5e1; position: sticky; top: 0; background: #f8fafc;">
+                    <th style="padding-bottom:0.5rem; width:20px;">#</th>
+                    <th style="padding-bottom:0.5rem;">Product Name</th>
+                    <th style="text-align:right; padding-bottom:0.5rem;">มูลค่าสุทธิ (บาท)</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>  <!-- Customer Detail Tooltip -->
   <div id="customerTooltip" class="customer-tooltip" style="display:none; opacity:0;"></div>
   <!-- Sales Rep Detail Tooltip -->
   <div id="salesRepTooltip" class="customer-tooltip" style="display:none; opacity:0; border-left-color: #f43f5e;"></div>
@@ -1098,6 +1186,53 @@
       document.body.removeChild(link);
     }
 
+    function exportNetData() {
+      const passKeywords = ['ผ่าน','pass','ok','approve','คืนคลัง','นำกลับ','รับคืน','เข้าคลัง'];
+      const netData = currentFilteredData.filter(d => {
+        const isQaWh = passKeywords.some(k => (d.qaWh || '').toLowerCase().includes(k));
+        const isQa = passKeywords.some(k => (d.qaResult || '').toLowerCase().includes(k));
+        return !isQaWh && !isQa;
+      });
+
+      if (!netData || netData.length === 0) {
+        showToast('ไม่มีข้อมูลยาคืนเสียให้ส่งออก', 'error');
+        return;
+      }
+
+      let csvContent = "data:text/csv;charset=utf-8,\uFEFF";
+      csvContent += "บริษัท,เดือน,เลขที่บิล,วันที่ออกบิล,ชื่อลูกค้า,พนักงานขาย,รหัสสินค้า,ชื่อสินค้า,Lot,จำนวน,หน่วย,ราคารวม,สาเหตุการคืน,สถานะคลัง (QA/WH),ผลประเมิน (QA),สถานะสุดท้าย\n";
+
+      netData.forEach(row => {
+        const r = [
+          `"${row.company || ''}"`,
+          `"${row.monthStr || ''}"`,
+          `"${row.billNo || ''}"`,
+          `"${row.billDate || ''}"`,
+          `"${row.customerName || ''}"`,
+          `"${row.salesRep || ''}"`,
+          `"${row.itemCode || ''}"`,
+          `"${row.productName || ''}"`,
+          `"${row.lot || ''}"`,
+          `"${row.qty || 0}"`,
+          `"${row.um || ''}"`,
+          `"${row.totalPrice || 0}"`,
+          `"${row.returnReason || ''}"`,
+          `"${row.qaWh || ''}"`,
+          `"${row.qaResult || ''}"`,
+          `"${row.finalStatus || ''}"`
+        ];
+        csvContent += r.join(',') + "\n";
+      });
+
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", `Net_Return_Data_${new Date().getTime()}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
     // --- Modals ---
     function openModal(id) {
       document.getElementById(id).style.display = 'flex';
@@ -1107,9 +1242,50 @@
       if (id === 'qaResultModal') renderQaResultModal();
       if (id === 'customerModal') renderCustomerModal();
       if (id === 'salesRepModal') renderSalesRepModal();
+      if (id === 'netModal') renderNetModal();
       if (id === 'salesRepDetailModal') {} // Data populated via openSalesRepDetail
     }
     function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+    function renderNetModal() {
+      const passKeywords = ['ผ่าน','pass','ok','approve','คืนคลัง','นำกลับ','รับคืน','เข้าคลัง'];
+      const repMap = {};
+      const custMap = {};
+      const prodMap = {};
+
+      currentFilteredData.forEach(d => {
+        const isQaWh = passKeywords.some(k => (d.qaWh || '').toLowerCase().includes(k));
+        const isQa = passKeywords.some(k => (d.qaResult || '').toLowerCase().includes(k));
+        if (!isQaWh && !isQa) {
+          const val = d.totalPrice || 0;
+          
+          const rep = d.salesRep || 'ไม่ระบุ';
+          if (!repMap[rep]) repMap[rep] = 0;
+          repMap[rep] += val;
+
+          const cust = d.customerName || 'ไม่ระบุ';
+          if (!custMap[cust]) custMap[cust] = 0;
+          custMap[cust] += val;
+
+          const prod = d.productName || 'ไม่ระบุ';
+          if (!prodMap[prod]) prodMap[prod] = 0;
+          prodMap[prod] += val;
+        }
+      });
+
+      const topReps = Object.keys(repMap).map(k => ({name: k, val: repMap[k]})).sort((a,b) => b.val - a.val);
+      const topCusts = Object.keys(custMap).map(k => ({name: k, val: custMap[k]})).sort((a,b) => b.val - a.val);
+      const topProds = Object.keys(prodMap).map(k => ({name: k, val: prodMap[k]})).sort((a,b) => b.val - a.val);
+
+      const repTbody = document.querySelector('#netRepTable tbody');
+      repTbody.innerHTML = topReps.map((r, i) => `<tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding:0.5rem;">${i+1}</td><td style="padding:0.5rem;" title="${r.name}">${r.name}</td><td style="text-align:right; padding:0.5rem; color:#dc2626; font-weight:bold;">${formatCurrency(r.val)}</td></tr>`).join('');
+
+      const custTbody = document.querySelector('#netCustTable tbody');
+      custTbody.innerHTML = topCusts.map((r, i) => `<tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding:0.5rem;">${i+1}</td><td style="padding:0.5rem;" title="${r.name}">${r.name.substring(0,25)}</td><td style="text-align:right; padding:0.5rem; color:#dc2626; font-weight:bold;">${formatCurrency(r.val)}</td></tr>`).join('');
+
+      const prodTbody = document.querySelector('#netProdTable tbody');
+      prodTbody.innerHTML = topProds.map((r, i) => `<tr style="border-bottom: 1px solid #f1f5f9;"><td style="padding:0.5rem;">${i+1}</td><td style="padding:0.5rem;" title="${r.name}">${r.name.substring(0,25)}</td><td style="text-align:right; padding:0.5rem; color:#dc2626; font-weight:bold;">${formatCurrency(r.val)}</td></tr>`).join('');
+    }
     function handleOverlayClick(e, id) {
       if (e.target.id === id) closeModal(id);
     }
@@ -1323,22 +1499,56 @@
       const netNeoca = valNeoca - (qaWhNeoca + qaNeoca);
       const netProsp = valProsp - (qaWhProsp + qaProsp);
 
+      const expireKeywords = ['หมดอายุ', 'expire'];
+      const destroyKeywords = ['ทำลาย', 'destroy', 'ทิ้ง'];
+      let netExpire = 0;
+      let netDestroy = 0;
+      filtered.forEach(d => {
+        const isQaWh = passKeywords.some(k => (d.qaWh || '').toLowerCase().includes(k));
+        const isQa = passKeywords.some(k => (d.qaResult || '').toLowerCase().includes(k));
+        if (!isQaWh && !isQa) {
+          const txt = (d.returnReason + ' ' + d.qaResult + ' ' + d.finalStatus).toLowerCase();
+          if (destroyKeywords.some(k => txt.includes(k))) {
+            netDestroy += (d.totalPrice || 0);
+          } else if (expireKeywords.some(k => txt.includes(k))) {
+            netExpire += (d.totalPrice || 0);
+          }
+        }
+      });
+      const destroyPct = netValue > 0 ? ((netDestroy / netValue) * 100).toFixed(1) : 0;
+      const expirePct = netValue > 0 ? ((netExpire / netValue) * 100).toFixed(1) : 0;
+      
+      const combinedQa = qaWhReturn + qaReturn;
+      const qaWhPct = combinedQa > 0 ? ((qaWhReturn / combinedQa) * 100).toFixed(1) : 0;
+      const qaPct = combinedQa > 0 ? ((qaReturn / combinedQa) * 100).toFixed(1) : 0;
+
       // Update UI Cards
       document.getElementById('sumValue').innerText = formatCurrency(totalValue);
       document.getElementById('valNeoca').innerText = 'Neoca: ' + formatCurrency(valNeoca);
       document.getElementById('valProsp').innerText = 'Prosp: ' + formatCurrency(valProsp);
 
+      const totalNetPct = totalValue > 0 ? ((netValue / totalValue) * 100).toFixed(1) : 0;
+      const totalQaPct = totalValue > 0 ? ((combinedQa / totalValue) * 100).toFixed(1) : 0;
+      const sumValueTotalNetEl = document.getElementById('sumValueTotalNet');
+      if (sumValueTotalNetEl) sumValueTotalNetEl.innerText = `${formatCurrency(netValue)} (${totalNetPct}%)`;
+      const sumValueTotalQaEl = document.getElementById('sumValueTotalQa');
+      if (sumValueTotalQaEl) sumValueTotalQaEl.innerText = `${formatCurrency(combinedQa)} (${totalQaPct}%)`;
+
       document.getElementById('sumNetValue').innerText = formatCurrency(netValue);
       document.getElementById('netNeoca').innerText = 'Neoca: ' + formatCurrency(netNeoca);
       document.getElementById('netProsp').innerText = 'Prosp: ' + formatCurrency(netProsp);
+      
+      const netDestroyEl = document.getElementById('netDestroy');
+      if(netDestroyEl) netDestroyEl.innerText = `${formatCurrency(netDestroy)} (${destroyPct}%)`;
+      const netExpireEl = document.getElementById('netExpire');
+      if(netExpireEl) netExpireEl.innerText = `${formatCurrency(netExpire)} (${expirePct}%)`;
 
-      document.getElementById('sumQaWhReturn').innerText = formatCurrency(qaWhReturn);
-      document.getElementById('qaWhNeoca').innerText = 'Neoca: ' + formatCurrency(qaWhNeoca);
-      document.getElementById('qaWhProsp').innerText = 'Prosp: ' + formatCurrency(qaWhProsp);
-
-      document.getElementById('sumQaReturn').innerText = formatCurrency(qaReturn);
-      document.getElementById('qaNeoca').innerText = 'Neoca: ' + formatCurrency(qaNeoca);
-      document.getElementById('qaProsp').innerText = 'Prosp: ' + formatCurrency(qaProsp);
+      const sumQaCombinedEl = document.getElementById('sumQaCombined');
+      if(sumQaCombinedEl) sumQaCombinedEl.innerText = formatCurrency(combinedQa);
+      const sumQaWhReturnTextEl = document.getElementById('sumQaWhReturnText');
+      if(sumQaWhReturnTextEl) sumQaWhReturnTextEl.innerText = `${formatCurrency(qaWhReturn)} (${qaWhPct}%)`;
+      const sumQaReturnTextEl = document.getElementById('sumQaReturnText');
+      if(sumQaReturnTextEl) sumQaReturnTextEl.innerText = `${formatCurrency(qaReturn)} (${qaPct}%)`;
 
       document.getElementById('sumRows').innerText = uniqueBillsCount.toLocaleString() + ' รายการ';
       document.getElementById('billNeoca').innerText = 'Neoca: ' + billNeoca.toLocaleString();
