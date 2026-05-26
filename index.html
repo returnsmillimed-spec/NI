@@ -391,8 +391,8 @@
         <h4 style="color:#d97706; font-weight:bold;">มูลค่าการคืนรวม</h4>
         <h2 id="sumValue" style="color:#b45309;">฿0</h2>
         <div class="card-breakdown" style="flex-wrap:wrap; gap:0.5rem; justify-content:center; margin-bottom: 0.5rem;">
-          <span class="badge-neoca" id="valNeoca">Neoca: ฿0</span>
           <span class="badge-prosp" id="valProsp">Prosp: ฿0</span>
+          <span class="badge-neoca" id="valNeoca">Neoca: ฿0</span>
         </div>
         <div style="font-size: 0.75rem; color: #475569; display: flex; flex-direction:column; gap: 0.35rem; border-top: 1px solid rgba(245, 158, 11, 0.2); padding-top: 0.5rem; margin-top:0.5rem;">
           <div style="display:flex; justify-content:space-between;">
@@ -410,14 +410,10 @@
         <h4 style="color:#ef4444; font-weight:bold;">ยาคืนเสีย</h4>
         <h2 id="sumNetValue" style="color:#dc2626;">฿0</h2>
         <div class="card-breakdown" style="flex-wrap:wrap; gap:0.5rem; justify-content:center; margin-bottom: 0.5rem;">
-          <span class="badge-neoca" id="netNeoca">Neoca: ฿0</span>
           <span class="badge-prosp" id="netProsp">Prosp: ฿0</span>
+          <span class="badge-neoca" id="netNeoca">Neoca: ฿0</span>
         </div>
-        <div style="font-size: 0.75rem; color: #475569; display: flex; justify-content: space-around; border-top: 1px solid rgba(239, 68, 68, 0.2); padding-top: 0.5rem;">
-          <div title="คำนวณจากคีย์เวิร์ด ทำลาย, ทิ้ง">ทำลาย: <strong id="netDestroy" style="color:#dc2626;">฿0 (0%)</strong></div>
-          <div title="คำนวณจากคีย์เวิร์ด หมดอายุ, expire">หมดอายุ: <strong id="netExpire" style="color:#f59e0b;">฿0 (0%)</strong></div>
-          <div title="สาเหตุอื่นๆ ที่ไม่ได้ระบุว่าทำลายหรือหมดอายุ">อื่นๆ: <strong id="netOther" style="color:#64748b;">฿0 (0%)</strong></div>
-        </div>
+
       </div>
       <div class="glass card color-emerald" style="background: rgba(16, 185, 129, 0.05); border: 1px solid #10b981;">
         <h4 style="color:#059669; font-weight:bold;">นำกลับเข้าคลัง (QA & WH)</h4>
@@ -450,24 +446,24 @@
           <h4>จำนวนรายการบิล (Bill No.)</h4>
           <h2 id="sumRows">0 รายการ</h2>
           <div class="card-breakdown">
-            <span class="badge-neoca" id="billNeoca">Neoca: 0</span>
             <span class="badge-prosp" id="billProsp">Prosp: 0</span>
+            <span class="badge-neoca" id="billNeoca">Neoca: 0</span>
           </div>
         </div>
         <div class="glass card color-emerald" style="margin-bottom: 0; flex: 1; display: flex; flex-direction: column; justify-content: center;">
           <h4>จำนวน Lot ที่คืน</h4>
           <h2 id="sumLots">0 Lot</h2>
           <div class="card-breakdown">
-            <span class="badge-neoca" id="lotNeoca">Neoca: 0</span>
             <span class="badge-prosp" id="lotProsp">Prosp: 0</span>
+            <span class="badge-neoca" id="lotNeoca">Neoca: 0</span>
           </div>
         </div>
         <div class="glass card color-rose" style="margin-bottom: 0; flex: 1; display: flex; flex-direction: column; justify-content: center;">
           <h4>สาเหตุหลักที่คืน</h4>
           <h2 id="sumReason" style="font-size: 1.2rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">-</h2>
           <div class="card-breakdown">
-            <span class="badge-neoca" id="reasonNeoca">Neoca: 0</span>
             <span class="badge-prosp" id="reasonProsp">Prosp: 0</span>
+            <span class="badge-neoca" id="reasonNeoca">Neoca: 0</span>
           </div>
         </div>
       </div>
@@ -491,15 +487,11 @@
             <div id="custSumTotal" style="font-size:1rem; font-weight:700; color:#a78bfa;">฿0</div>
           </div>
           <div style="flex:1; min-width:130px; background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.3); border-radius:8px; padding:0.5rem 0.75rem;">
-            <div style="font-size:0.7rem; color:#94a3b8; margin-bottom:0.2rem;">✅ QA/WH นำกลับเข้าคลัง</div>
-            <div id="custSumQaWh" style="font-size:1rem; font-weight:700; color:#34d399;">฿0</div>
-          </div>
-          <div style="flex:1; min-width:130px; background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.3); border-radius:8px; padding:0.5rem 0.75rem;">
-            <div style="font-size:0.7rem; color:#94a3b8; margin-bottom:0.2rem;">✅ ประเมิณโดย QA นำกลับ</div>
-            <div id="custSumQa" style="font-size:1rem; font-weight:700; color:#34d399;">฿0</div>
+            <div style="font-size:0.7rem; color:#94a3b8; margin-bottom:0.2rem;">✅ นำกลับเข้าคลัง</div>
+            <div id="custSumCombinedQa" style="font-size:1rem; font-weight:700; color:#34d399;">฿0</div>
           </div>
           <div style="flex:1; min-width:130px; background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); border-radius:8px; padding:0.5rem 0.75rem;">
-            <div style="font-size:0.7rem; color:#94a3b8; margin-bottom:0.2rem;">📉 สุทธิ (หักกลับเข้าคลัง)</div>
+            <div style="font-size:0.7rem; color:#94a3b8; margin-bottom:0.2rem;">📉 ยาคืนเสีย</div>
             <div id="custSumNet" style="font-size:1rem; font-weight:700; color:#f87171;">฿0</div>
           </div>
         </div>
@@ -523,15 +515,11 @@
             <div id="repSumTotal" style="font-size:1rem; font-weight:700; color:#fb7185;">฿0</div>
           </div>
           <div style="flex:1; min-width:130px; background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.3); border-radius:8px; padding:0.5rem 0.75rem;">
-            <div style="font-size:0.7rem; color:#94a3b8; margin-bottom:0.2rem;">✅ QA/WH นำกลับเข้าคลัง</div>
-            <div id="repSumQaWh" style="font-size:1rem; font-weight:700; color:#34d399;">฿0</div>
-          </div>
-          <div style="flex:1; min-width:130px; background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.3); border-radius:8px; padding:0.5rem 0.75rem;">
-            <div style="font-size:0.7rem; color:#94a3b8; margin-bottom:0.2rem;">✅ ประเมิณโดย QA นำกลับ</div>
-            <div id="repSumQa" style="font-size:1rem; font-weight:700; color:#34d399;">฿0</div>
+            <div style="font-size:0.7rem; color:#94a3b8; margin-bottom:0.2rem;">✅ นำกลับเข้าคลัง</div>
+            <div id="repSumCombinedQa" style="font-size:1rem; font-weight:700; color:#34d399;">฿0</div>
           </div>
           <div style="flex:1; min-width:130px; background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); border-radius:8px; padding:0.5rem 0.75rem;">
-            <div style="font-size:0.7rem; color:#94a3b8; margin-bottom:0.2rem;">📉 สุทธิ (หักกลับเข้าคลัง)</div>
+            <div style="font-size:0.7rem; color:#94a3b8; margin-bottom:0.2rem;">📉 ยาคืนเสีย</div>
             <div id="repSumNet" style="font-size:1rem; font-weight:700; color:#f87171;">฿0</div>
           </div>
         </div>
@@ -548,8 +536,8 @@
           <div>
             <h3 style="margin: 0 0 0.25rem 0;">10 อันดับยาที่มีการคืนสูงสุด (ตามมูลค่า)</h3>
             <div style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem;" onclick="event.stopPropagation()">
-              <button class="chart-toggle-btn active" onclick="setChartFilter('barChart', 'Neoca', this)">Neoca</button>
-              <button class="chart-toggle-btn" onclick="setChartFilter('barChart', 'Prosp', this)">Prosp</button>
+              <button class="chart-toggle-btn active" onclick="setChartFilter('barChart', 'Prosp', this)">Prosp</button>
+              <button class="chart-toggle-btn" onclick="setChartFilter('barChart', 'Neoca', this)">Neoca</button>
             </div>
           </div>
           <span style="color: #38bdf8; font-size: 0.8rem; background: rgba(56, 189, 248, 0.1); padding: 0.2rem 0.5rem; border-radius: 4px;">คลิกดูทั้งหมด</span>
@@ -560,15 +548,11 @@
             <div id="prodSumTotal" style="font-size:1rem; font-weight:700; color:#38bdf8;">฿0</div>
           </div>
           <div style="flex:1; min-width:130px; background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.3); border-radius:8px; padding:0.5rem 0.75rem;">
-            <div style="font-size:0.7rem; color:#94a3b8; margin-bottom:0.2rem;">✅ QA/WH นำกลับเข้าคลัง</div>
-            <div id="prodSumQaWh" style="font-size:1rem; font-weight:700; color:#34d399;">฿0</div>
-          </div>
-          <div style="flex:1; min-width:130px; background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.3); border-radius:8px; padding:0.5rem 0.75rem;">
-            <div style="font-size:0.7rem; color:#94a3b8; margin-bottom:0.2rem;">✅ ประเมิณโดย QA นำกลับ</div>
-            <div id="prodSumQa" style="font-size:1rem; font-weight:700; color:#34d399;">฿0</div>
+            <div style="font-size:0.7rem; color:#94a3b8; margin-bottom:0.2rem;">✅ นำกลับเข้าคลัง</div>
+            <div id="prodSumCombinedQa" style="font-size:1rem; font-weight:700; color:#34d399;">฿0</div>
           </div>
           <div style="flex:1; min-width:130px; background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); border-radius:8px; padding:0.5rem 0.75rem;">
-            <div style="font-size:0.7rem; color:#94a3b8; margin-bottom:0.2rem;">📉 สุทธิ (หักกลับเข้าคลัง)</div>
+            <div style="font-size:0.7rem; color:#94a3b8; margin-bottom:0.2rem;">📉 ยาคืนเสีย</div>
             <div id="prodSumNet" style="font-size:1rem; font-weight:700; color:#f87171;">฿0</div>
           </div>
         </div>
@@ -595,8 +579,8 @@
           <div>
             <h3 style="margin: 0 0 0.5rem 0;">5 อันดับสาเหตุการคืนยา (%)</h3>
             <div style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem;" onclick="event.stopPropagation()">
-              <button class="chart-toggle-btn active" onclick="setChartFilter('reasonChart', 'Neoca', this)">Neoca</button>
-              <button class="chart-toggle-btn" onclick="setChartFilter('reasonChart', 'Prosp', this)">Prosp</button>
+              <button class="chart-toggle-btn active" onclick="setChartFilter('reasonChart', 'Prosp', this)">Prosp</button>
+              <button class="chart-toggle-btn" onclick="setChartFilter('reasonChart', 'Neoca', this)">Neoca</button>
             </div>
           </div>
           <div style="display: flex; gap: 0.5rem; align-items: center;">
@@ -987,7 +971,7 @@
     let allData = [];
     let charts = {};
     let currentFilteredData = [];
-    let activeChartFilter = { barChart: 'Neoca', reasonChart: 'Neoca' };
+    let activeChartFilter = { barChart: 'Prosp', reasonChart: 'Prosp' };
     let supabaseClient = null;
     let customerChartData = []; // store for tooltip use
     let salesRepChartData = []; // store for sales rep tooltip use
@@ -1688,15 +1672,40 @@
       const prodTop10Qa = sortedProds.reduce((s,d) => s+d.qa, 0);
       const prodTop10Net = sortedProds.reduce((s,d) => s+d.net, 0);
       document.getElementById('prodSumTotal').innerText = formatCurrency(prodTop10Total);
-      document.getElementById('prodSumQaWh').innerText = formatCurrency(prodTop10QaWh);
-      document.getElementById('prodSumQa').innerText = formatCurrency(prodTop10Qa);
+      document.getElementById('prodSumCombinedQa').innerText = formatCurrency(prodTop10QaWh + prodTop10Qa);
       document.getElementById('prodSumNet').innerText = formatCurrency(prodTop10Net);
       drawBarChartValue('barChart', sortedProds, 'y', colorProd);
 
       // Top Reasons Chart
       const reasonFiltered = filtered.filter(d => d.company === activeChartFilter.reasonChart);
       const reasonMap = {};
-      reasonFiltered.forEach(d => { reasonMap[d.returnReason] = (reasonMap[d.returnReason] || 0) + 1; });
+      
+      function groupReturnReason(reason) {
+        if (!reason || reason.trim() === '-') return "ไม่ระบุเหตุผล";
+        let r = reason.replace(/\s+/g, '').toLowerCase();
+        
+        if (r.includes("ซ้ำ")) return "ออเดอร์ซ้ำ / สั่งยาซ้ำ";
+        if (r.includes("ผู้แทน") && (r.includes("ผิด") || r.includes("เกิน") || r.includes("ขนาด") || r.includes("จำนวน") || r.includes("ซ้ำ"))) return "ผู้แทนเปิดออเดอร์ผิด";
+        if ((r.includes("แอดมิน") || r.includes("admin")) && (r.includes("ผิด") || r.includes("ซ้ำ"))) return "แอดมินเปิดออเดอร์ผิด";
+        
+        if (r.includes("สั่งผิด") || r.includes("สั่งสินค้าผิด") || r.includes("สั่งยาผิด") || r.includes("เช็คสต็อกผิด") || r.includes("เช็ตสต็อกผิด") || r.includes("เช็คผิด") || r.includes("ผิดขนาด") || r.includes("ผิดจำนวน") || r.includes("โค้ดผิด")) return "ลูกค้าสั่งผิด / เช็คสต็อกผิด";
+        
+        if (r.includes("อายุสั้น") || r.includes("ระบายช้า") || r.includes("จ่ายยาไม่ทัน") || r.includes("เกณฑ์")) return "ยาอายุสั้น / ระบายช้า";
+        if (r.includes("ไม่รับ") || r.includes("ยกเลิก") || r.includes("ที่อื่น") || r.includes("คืนยา")) return "ลูกค้ายกเลิก / ไม่รับสินค้า";
+        if (r.includes("ชำรุด") || r.includes("บุบ") || r.includes("แตก") || r.includes("พัง") || r.includes("ขาด")) return "สินค้าชำรุด / กล่องบุบ";
+        if (r.includes("ราคา")) return "ปัญหาเรื่องราคา";
+        if (r.includes("สเปค") || r.includes("qc") || r.includes("เปลี่ยนกล่อง")) return "ปัญหาคุณภาพสินค้า (QC)";
+        if (r.includes("ส่งผิดสาขา")) return "ส่งผิดสาขา";
+        
+        let clean = reason.trim();
+        if (clean.startsWith("เนื่องจาก")) clean = clean.substring(9).trim();
+        return clean;
+      }
+
+      reasonFiltered.forEach(d => { 
+        const gReason = groupReturnReason(d.returnReason);
+        reasonMap[gReason] = (reasonMap[gReason] || 0) + 1; 
+      });
       const sortedReasons = Object.keys(reasonMap).map(k => ({name:k, val:reasonMap[k]})).sort((a,b)=>b.val-a.val).slice(0, 5);
       const colorReason = activeChartFilter.reasonChart === 'Neoca' ? '#38bdf8' : '#10b981';
       drawBarChartPercent('reasonChart', sortedReasons.map(p=>p.name), sortedReasons.map(p=>p.val), reasonFiltered.length, 'y', colorReason);
@@ -1726,8 +1735,7 @@
       const custTop10Qa = sortedCusts.reduce((s,d) => s+d.qa, 0);
       const custTop10Net = sortedCusts.reduce((s,d) => s+d.net, 0);
       document.getElementById('custSumTotal').innerText = formatCurrency(custTop10Total);
-      document.getElementById('custSumQaWh').innerText = formatCurrency(custTop10QaWh);
-      document.getElementById('custSumQa').innerText = formatCurrency(custTop10Qa);
+      document.getElementById('custSumCombinedQa').innerText = formatCurrency(custTop10QaWh + custTop10Qa);
       document.getElementById('custSumNet').innerText = formatCurrency(custTop10Net);
       drawCustomerChart('customerChart', sortedCusts, totalCustValue);
 
@@ -1756,8 +1764,7 @@
       const repTop10Qa = sortedReps.reduce((s,d) => s+d.qa, 0);
       const repTop10Net = sortedReps.reduce((s,d) => s+d.net, 0);
       document.getElementById('repSumTotal').innerText = formatCurrency(repTop10Total);
-      document.getElementById('repSumQaWh').innerText = formatCurrency(repTop10QaWh);
-      document.getElementById('repSumQa').innerText = formatCurrency(repTop10Qa);
+      document.getElementById('repSumCombinedQa').innerText = formatCurrency(repTop10QaWh + repTop10Qa);
       document.getElementById('repSumNet').innerText = formatCurrency(repTop10Net);
       drawSalesRepChart('salesRepChart', sortedReps, totalRepValue);
 
@@ -1928,9 +1935,8 @@
                 <div class="tooltip-pct">📊 สัดส่วน: ${pct}% ของมูลค่ารวม</div>
                 <div class="tooltip-items">📦 จำนวนรายการ: ${d.count ? d.count.toLocaleString() : '-'} รายการ</div>
                 <div style="margin-top:0.5rem; font-size:0.75rem; border-top:1px solid #e2e8f0; padding-top:0.5rem;">
-                  <div style="color:#10b981;">✅ มูลค่า QA/WH นำกลับเข้าคลัง: ${formatCurrency(d.qaWh)}</div>
-                  <div style="color:#10b981;">✅ มูลค่าการคืน ที่ประเมิณโดย QA: ${formatCurrency(d.qa)}</div>
-                  <div style="color:#ef4444; font-weight:bold;">📉 หักกลับเข้าคลัง (สุทธิ): ${formatCurrency(d.net)}</div>
+                  <div style="color:#10b981;">✅ นำกลับเข้าคลัง: ${formatCurrency((d.qaWh || 0) + (d.qa || 0))}</div>
+                  <div style="color:#ef4444; font-weight:bold;">📉 ยาคืนเสีย: ${formatCurrency(d.net)}</div>
                 </div>
               `;
               const rect = document.getElementById(canvasId).getBoundingClientRect();
@@ -2056,9 +2062,8 @@
               <div class="tooltip-pct">📊 สัดส่วน: ${pct}% ของมูลค่ารวม</div>
               <div class="tooltip-items">📦 จำนวนรายการ: ${d.count ? d.count.toLocaleString() : '-'} รายการ</div>
               <div style="margin-top:0.5rem; font-size:0.75rem; border-top:1px solid #e2e8f0; padding-top:0.5rem;">
-                <div style="color:#10b981;">✅ มูลค่า QA/WH นำกลับเข้าคลัง: ${formatCurrency(d.qaWh)}</div>
-                <div style="color:#10b981;">✅ มูลค่าการคืน ที่ประเมิณโดย QA: ${formatCurrency(d.qa)}</div>
-                <div style="color:#ef4444; font-weight:bold;">📉 หักกลับเข้าคลัง (สุทธิ): ${formatCurrency(d.net)}</div>
+                <div style="color:#10b981;">✅ นำกลับเข้าคลัง: ${formatCurrency((d.qaWh || 0) + (d.qa || 0))}</div>
+                <div style="color:#ef4444; font-weight:bold;">📉 ยาคืนเสีย: ${formatCurrency(d.net)}</div>
               </div>
             `;
             const rect = document.getElementById(canvasId).getBoundingClientRect();
@@ -2174,12 +2179,12 @@
               tooltip.innerHTML = `
                 <div class="tooltip-name" style="margin-bottom:0.3rem;">📅 เดือน: ${label}</div>
                 <div style="font-size:0.75rem; color:#64748b; margin-bottom:0.4rem; padding-bottom:0.4rem; border-bottom:1px solid #e2e8f0;">
-                  <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#38bdf8; margin-right:4px;"></span>Neoca: ${formatCurrency(dataNeoca[idx]||0)}<br>
-                  <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#10b981; margin-right:4px;"></span>Prosp: ${formatCurrency(dataProsp[idx]||0)}
+                  <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#10b981; margin-right:4px;"></span>Prosp: ${formatCurrency(dataProsp[idx]||0)}<br>
+                  <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#38bdf8; margin-right:4px;"></span>Neoca: ${formatCurrency(dataNeoca[idx]||0)}
                 </div>
-                <div class="tooltip-value" style="color: #0f172a; margin-top:0.25rem;">💰 คืนรวมทั้งเดือน: ${formatCurrency(monthTotal)}</div>
+                <div class="tooltip-value" style="color: #0f172a; margin-top:0.25rem;">💰 มูลค่าคืนรวม: ${formatCurrency(monthTotal)}</div>
                 <div style="margin-top:0.35rem; font-size:0.75rem;">
-                  <div style="color:#ef4444; font-weight:bold;">📉 หักกลับเข้าคลัง (สุทธิ): ${formatCurrency(monthNetTotal)}</div>
+                  <div style="color:#ef4444; font-weight:bold;">📉 ยาเสีย: ${formatCurrency(monthNetTotal)}</div>
                 </div>
               `;
               const rect = document.getElementById(canvasId).getBoundingClientRect();
@@ -2261,9 +2266,8 @@
                 <div class="tooltip-value" style="color: ${color};">${formatCurrency(d.val)}</div>
                 <div class="tooltip-pct">📊 สัดส่วน: ${pct}% ของ Top 10 นี้</div>
                 <div style="margin-top:0.5rem; font-size:0.75rem; border-top:1px solid #e2e8f0; padding-top:0.5rem;">
-                  <div style="color:#10b981;">✅ มูลค่า QA/WH นำกลับเข้าคลัง: ${formatCurrency(d.qaWh)}</div>
-                  <div style="color:#10b981;">✅ มูลค่าการคืน ที่ประเมิณโดย QA: ${formatCurrency(d.qa)}</div>
-                  <div style="color:#ef4444; font-weight:bold;">📉 หักกลับเข้าคลัง (สุทธิ): ${formatCurrency(d.net)}</div>
+                  <div style="color:#10b981;">✅ นำกลับเข้าคลัง: ${formatCurrency((d.qaWh || 0) + (d.qa || 0))}</div>
+                  <div style="color:#ef4444; font-weight:bold;">📉 ยาคืนเสีย: ${formatCurrency(d.net)}</div>
                 </div>
               `;
               const rect = document.getElementById(canvasId).getBoundingClientRect();
