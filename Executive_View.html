@@ -280,7 +280,7 @@
       </div>
       <div class="report-meta">
         วันที่จัดทำ: <span id="reportDate">—</span><br>
-        บริษัท: Neoca &amp; Prosp
+        บริษัท: Prosp &amp; Neoca
       </div>
     </div>
 
@@ -295,7 +295,8 @@
 
     <!-- KPI Cards -->
     <!-- KPI Cards (Financials) -->
-    <div class="kpi-grid" style="grid-template-columns: repeat(3, 1fr);">
+    <!-- Section 1: KPI Cards (4 Columns) -->
+    <div class="kpi-grid" style="grid-template-columns: repeat(4, 1fr);">
       <div class="kpi-card" style="border-left-color: #f59e0b; background: rgba(245, 158, 11, 0.05);">
         <div class="kpi-label" style="color:#d97706; font-weight:bold;">มูลค่าการคืนยารวม</div>
         <div class="kpi-value big" id="kpiTotalVal" style="color:#b45309;">—</div>
@@ -315,73 +316,55 @@
         <div class="kpi-label" style="color:#ef4444; font-weight:bold;">ยาคืนเสีย</div>
         <div class="kpi-value big" id="kpiNetVal" style="color:#dc2626;">—</div>
         <div class="kpi-trend trend-flat" style="margin-bottom: 0.5rem;">ยอดสุทธิที่ต้องติดตาม</div>
-        <div style="font-size: 0.75rem; color: #475569; display: flex; justify-content: space-around; border-top: 1px solid rgba(239, 68, 68, 0.2); padding-top: 0.5rem;">
-          <div>ทำลาย: <strong id="kpiNetDestroy" style="color:#dc2626;">฿0</strong></div>
-          <div>หมดอายุ: <strong id="kpiNetExpire" style="color:#f59e0b;">฿0</strong></div>
-          <div>อื่นๆ: <strong id="kpiNetOther" style="color:#64748b;">฿0</strong></div>
-        </div>
       </div>
       <div class="kpi-card success" style="background: rgba(16, 185, 129, 0.05); border: 1px solid #10b981; border-left-width: 5px;">
-        <div class="kpi-label" style="color:#059669; font-weight:bold;">นำกลับเข้าคลัง (QA & WH)</div>
+        <div class="kpi-label" style="color:#059669; font-weight:bold;">นำกลับเข้าคลัง</div>
         <div class="kpi-value big" id="kpiQaCombinedVal" style="color:#059669;">—</div>
-        <div style="font-size: 0.75rem; color: #475569; display: flex; flex-direction:column; gap: 0.35rem; border-top: 1px solid #e2e8f0; padding-top: 0.5rem; margin-top:0.5rem;">
-          <div style="display:flex; justify-content:space-between;">
-            <span>QA/WH นำกลับ:</span>
-            <strong id="kpiQaWhPctText" style="color:#059669;">—</strong>
-          </div>
-          <div style="display:flex; justify-content:space-between;">
-            <span>ประเมินโดย QA นำกลับ:</span>
-            <strong id="kpiQaPctText" style="color:#059669;">—</strong>
-          </div>
-        </div>
+      </div>
+      <div class="kpi-card" style="border-left-color: #2563eb; background: rgba(37, 99, 235, 0.05);">
+        <div class="kpi-label" style="color:#1d4ed8; font-weight:bold;">จำนวนใบคืน (Bill No.)</div>
+        <div class="kpi-value big" id="kpiBills" style="color:#1e3a5f;">—</div>
+        <div class="kpi-trend trend-flat" style="margin-bottom: 0.5rem;">จากทั้งหมด <span id="kpiRows" style="font-weight:bold;">—</span> รายการ</div>
       </div>
     </div>
 
-    <!-- Operations Overview -->
-    <div class="two-col" style="grid-template-columns: 1fr 1fr; margin-bottom: 1.5rem;">
-      <div class="panel" style="display:flex; justify-content:space-between; align-items:center;">
-        <div>
-          <div class="kpi-label">จำนวนใบคืน (Bill No.)</div>
-          <div class="kpi-value" id="kpiBills">—</div>
-          <div class="kpi-sub">จากรายการยาทั้งหมด: <span id="kpiRows" style="font-weight:bold; color:var(--accent);">—</span> รายการ</div>
-        </div>
-        <div style="font-size:3rem; opacity:0.1;">📄</div>
-      </div>
-      <div class="panel" style="display:flex; justify-content:space-between; align-items:center;">
-        <div>
-          <div class="kpi-label">สาเหตุหลักที่คืนยา</div>
-          <div class="kpi-value" id="kpiTopReason" style="font-size: 1.4rem; color:var(--warning);">—</div>
-          <div class="kpi-sub" id="kpiTopReasonPct">—</div>
-        </div>
-        <div style="font-size:3rem; opacity:0.1;">⚠️</div>
-      </div>
+    <!-- Hidden elements from old layout to prevent JS errors -->
+    <div style="display:none;">
+      <div id="kpiTopReason"></div>
+      <div id="kpiTopReasonPct"></div>
     </div>
 
-    <!-- Company Split -->
-    <div class="two-col">
+    <!-- Section 2: Insight / Recommendation Box -->
+    <div class="insight-box" id="insightBox">
+      <h4>💡 สรุปประเด็นสำคัญสำหรับผู้บริหาร (Key Insights)</h4>
+      <ul id="insightList"></ul>
+    </div>
+
+    <!-- Section 3: High-Level Analysis (3 Columns) -->
+    <div class="three-col">
       <div class="panel">
-        <div class="section-title">เปรียบเทียบมูลค่าคืนยา: Neoca vs Prosp</div>
+        <div class="section-title">เปรียบเทียบมูลค่าคืนยา: Prosp vs Neoca</div>
         <div class="company-compare">
-          <div class="company-block neoca">
-            <div class="company-name neoca">Neoca</div>
-            <div class="company-val neoca" id="neocaVal">—</div>
-            <div class="company-pct" id="neocaPct">—</div>
-          </div>
           <div class="company-block prosp">
             <div class="company-name prosp">Prosp</div>
             <div class="company-val prosp" id="prospVal">—</div>
             <div class="company-pct" id="prospPct">—</div>
           </div>
+          <div class="company-block neoca">
+            <div class="company-name neoca">Neoca</div>
+            <div class="company-val neoca" id="neocaVal">—</div>
+            <div class="company-pct" id="neocaPct">—</div>
+          </div>
         </div>
         <div style="margin-top: 0.75rem;">
           <div style="font-size:0.75rem; color:var(--text-sub); margin-bottom:0.3rem;">สัดส่วนมูลค่า</div>
           <div style="height: 14px; background:#e2e8f0; border-radius:99px; overflow:hidden; display:flex;">
-            <div id="neocaBar" style="height:100%; background:#2563eb; border-radius:99px 0 0 99px; transition:width 0.5s;"></div>
-            <div id="prospBar" style="height:100%; background:#16a34a; border-radius:0 99px 99px 0; transition:width 0.5s;"></div>
+            <div id="prospBar" style="height:100%; background:#16a34a; border-radius:99px 0 0 99px; transition:width 0.5s;"></div>
+            <div id="neocaBar" style="height:100%; background:#2563eb; border-radius:0 99px 99px 0; transition:width 0.5s;"></div>
           </div>
           <div style="display:flex; justify-content:space-between; font-size:0.72rem; color:var(--text-sub); margin-top:0.25rem;">
-            <span style="color:#2563eb; font-weight:700;" id="neocaBarLabel">Neoca —%</span>
             <span style="color:#16a34a; font-weight:700;" id="prospBarLabel">Prosp —%</span>
+            <span style="color:#2563eb; font-weight:700;" id="neocaBarLabel">Neoca —%</span>
           </div>
         </div>
       </div>
@@ -390,54 +373,44 @@
         <div class="section-title">แนวโน้มมูลค่าคืนยา 3 เดือนล่าสุด</div>
         <div id="trendRows">—</div>
       </div>
-    </div>
 
-    <!-- Top Tables -->
-    <div class="two-col">
-      <!-- Top 10 Reasons -->
-      <div class="panel">
-        <div class="section-title">สาเหตุหลักในการคืนยา (Top 10)</div>
-        <table class="exec-table">
-          <thead>
-            <tr><th>#</th><th>สาเหตุ</th><th style="text-align:right;">มูลค่ารวม</th><th style="text-align:right;">สุทธิ (หักเข้าคลัง)</th><th>สัดส่วน (สุทธิ)</th></tr>
-          </thead>
-          <tbody id="reasonTableBody"></tbody>
-        </table>
-      </div>
-
-      <!-- QA breakdown -->
       <div class="panel">
         <div class="section-title">ผลการประเมิน QA — สรุปภาพรวม</div>
         <div id="qaRows" style="margin-top:0.5rem;"></div>
       </div>
     </div>
 
-    <!-- Customer & Sales Rep -->
-    <div class="two-col">
+    <!-- Section 4: Detailed Breakdown (3 Columns) -->
+    <div class="three-col">
       <div class="panel">
-        <div class="section-title">🏆 10 ลูกค้าที่คืนยามูลค่าสูงสุด (ต้องติดตาม)</div>
+        <div class="section-title">สาเหตุหลักในการคืนยา (Top 10)</div>
         <table class="exec-table">
           <thead>
-            <tr><th>#</th><th>ชื่อลูกค้า</th><th style="text-align:right;">มูลค่ารวม</th><th style="text-align:right;">สุทธิ (หักเข้าคลัง)</th><th>สัดส่วน (สุทธิ)</th></tr>
+            <tr><th>#</th><th>สาเหตุ</th><th style="text-align:right;">มูลค่า</th><th style="text-align:right;">ยาคืนเสีย</th><th>สัดส่วน (ยาคืนเสีย)</th></tr>
+          </thead>
+          <tbody id="reasonTableBody"></tbody>
+        </table>
+      </div>
+
+      <div class="panel">
+        <div class="section-title">🏆 10 ลูกค้าที่คืนยามูลค่าสูงสุด</div>
+        <table class="exec-table">
+          <thead>
+            <tr><th>#</th><th>ลูกค้า</th><th style="text-align:right;">มูลค่า</th><th style="text-align:right;">ยาคืนเสีย</th><th>สัดส่วน (ยาคืนเสีย)</th></tr>
           </thead>
           <tbody id="custTableBody"></tbody>
         </table>
       </div>
+
       <div class="panel">
-        <div class="section-title">💼 10 ผู้แทนที่มียาคืนมูลค่าสูงสุด (ต้อง Coaching)</div>
+        <div class="section-title">💼 10 ผู้แทนที่มียาคืนมูลค่าสูงสุด</div>
         <table class="exec-table">
           <thead>
-            <tr><th>#</th><th>ชื่อผู้แทน</th><th style="text-align:right;">มูลค่ารวม</th><th style="text-align:right;">สุทธิ (หักเข้าคลัง)</th><th>สัดส่วน (สุทธิ)</th></tr>
+            <tr><th>#</th><th>ชื่อผู้แทน</th><th style="text-align:right;">มูลค่า</th><th style="text-align:right;">ยาคืนเสีย</th><th>สัดส่วน (ยาคืนเสีย)</th></tr>
           </thead>
           <tbody id="repTableBody"></tbody>
         </table>
       </div>
-    </div>
-
-    <!-- Insight / Recommendation Box -->
-    <div class="insight-box" id="insightBox">
-      <h4>💡 สรุปประเด็นสำคัญสำหรับผู้บริหาร (Key Insights)</h4>
-      <ul id="insightList"></ul>
     </div>
 
     <!-- Footer -->
@@ -527,19 +500,12 @@
       document.getElementById('reportDate').textContent = now.toLocaleDateString('th-TH', {year:'numeric',month:'long',day:'numeric'});
       document.getElementById('printDate').textContent = now.toLocaleDateString('th-TH', {year:'numeric',month:'long',day:'numeric'});
 
-      // ---- KPI: Total and Financials ----
       const passKeywords = ['ผ่าน','pass','ok','approve','คืนคลัง','นำกลับ'];
       
       let totalVal = 0;
       let qaWhVal = 0;
       let qaResultVal = 0;
-      let netDestroy = 0;
-      let netExpire = 0;
-      let netOther = 0;
       let totalBillsSet = new Set();
-      
-      const expireKeywords = ['หมดอายุ', 'expire'];
-      const destroyKeywords = ['ทำลาย', 'destroy', 'ทิ้ง'];
       
       data.forEach(d => {
         totalVal += d.totalPrice;
@@ -550,13 +516,6 @@
         
         if (isQaWh) qaWhVal += d.totalPrice;
         if (isQaResult) qaResultVal += d.totalPrice;
-        
-        if (!isQaWh && !isQaResult) {
-          const txt = (d.returnReason + ' ' + d.qaResult + ' ' + d.finalStatus).toLowerCase();
-          if (destroyKeywords.some(k => txt.includes(k))) netDestroy += d.totalPrice;
-          else if (expireKeywords.some(k => txt.includes(k))) netExpire += d.totalPrice;
-          else netOther += d.totalPrice;
-        }
       });
       
       let netVal = totalVal - (qaWhVal + qaResultVal);
@@ -565,29 +524,17 @@
 
       const totalNetPct = totalVal > 0 ? ((netVal / totalVal) * 100).toFixed(1) : 0;
       const totalQaPct = totalVal > 0 ? ((qaCombinedVal / totalVal) * 100).toFixed(1) : 0;
-      const destroyPct = netVal > 0 ? ((netDestroy / netVal) * 100).toFixed(1) : 0;
-      const expirePct = netVal > 0 ? ((netExpire / netVal) * 100).toFixed(1) : 0;
-      const otherPct = netVal > 0 ? ((netOther / netVal) * 100).toFixed(1) : 0;
-      const qaWhPct = qaCombinedVal > 0 ? ((qaWhVal / qaCombinedVal) * 100).toFixed(1) : 0;
-      const qaPct = qaCombinedVal > 0 ? ((qaResultVal / qaCombinedVal) * 100).toFixed(1) : 0;
 
       document.getElementById('kpiTotalVal').textContent = fmtShort(totalVal);
       document.getElementById('kpiTotalNet').textContent = `${fmtShort(netVal)} (${totalNetPct}%)`;
       document.getElementById('kpiTotalQa').textContent = `${fmtShort(qaCombinedVal)} (${totalQaPct}%)`;
 
       document.getElementById('kpiNetVal').textContent = fmtShort(netVal);
-      document.getElementById('kpiNetDestroy').textContent = `${fmtShort(netDestroy)} (${destroyPct}%)`;
-      document.getElementById('kpiNetExpire').textContent = `${fmtShort(netExpire)} (${expirePct}%)`;
-      document.getElementById('kpiNetOther').textContent = `${fmtShort(netOther)} (${otherPct}%)`;
-
       document.getElementById('kpiQaCombinedVal').textContent = fmtShort(qaCombinedVal);
-      document.getElementById('kpiQaWhPctText').textContent = `${fmtShort(qaWhVal)} (${qaWhPct}%)`;
-      document.getElementById('kpiQaPctText').textContent = `${fmtShort(qaResultVal)} (${qaPct}%)`;
 
       document.getElementById('kpiBills').textContent = totalBills.toLocaleString();
       document.getElementById('kpiRows').textContent = data.length.toLocaleString();
 
-      // ---- Months ----
       const monthMap = {};
       data.forEach(d => {
         if (!monthMap[d.monthStr]) monthMap[d.monthStr] = {val: 0, qaWh: 0, qa: 0};
@@ -601,7 +548,6 @@
       const latestMonth = sortedMonths[sortedMonths.length - 1] || '—';
       const prevMonth = sortedMonths[sortedMonths.length - 2] || null;
 
-      // Trend KPI
       if (prevMonth) {
         const currVal = monthMap[latestMonth].val || 0;
         const prevVal = monthMap[prevMonth].val || 0;
@@ -621,7 +567,6 @@
         document.getElementById('kpiTrend').textContent = 'ข้อมูลเดือนแรก';
       }
 
-      // ---- Neoca vs Prosp ----
       const neocaVal = data.filter(d => d.company === 'Neoca').reduce((s,d) => s+d.totalPrice, 0);
       const prospVal = data.filter(d => d.company === 'Prosp').reduce((s,d) => s+d.totalPrice, 0);
       const neocaPct = totalVal > 0 ? (neocaVal/totalVal*100) : 0;
@@ -635,7 +580,6 @@
       document.getElementById('neocaBarLabel').textContent = `Neoca ${neocaPct.toFixed(1)}%`;
       document.getElementById('prospBarLabel').textContent = `Prosp ${prospPct.toFixed(1)}%`;
 
-      // ---- Trend: Last 3 months ----
       const last3 = sortedMonths.slice(-3);
       const colors = ['#2563eb','#7c3aed','#dc2626'];
       let trendHtml = '';
@@ -654,7 +598,7 @@
               <div class="donut-bar-bg" style="display:flex; flex-direction:column; background:transparent; height:auto; overflow:visible;">
                 <div style="font-size:0.75rem; color:var(--text-sub); display:flex; justify-content:space-between; margin-bottom:4px;">
                   <span>รวม: ${fmtShort(v)}</span>
-                  <span style="color:#dc2626; font-weight:bold;">สุทธิ: ${fmtShort(net)}</span>
+                  <span style="color:#dc2626; font-weight:bold;">ยาคืนเสีย: ${fmtShort(net)}</span>
                 </div>
                 <div style="height:10px; width:100%; background:#e2e8f0; border-radius:99px; overflow:hidden;">
                   <div class="donut-bar-fill" style="width:${w}%; background:${colors[i]};"></div>
@@ -668,19 +612,42 @@
           const d = prevNet > 0 ? ((currNet-prevNet)/prevNet*100) : 0;
           const arrow = d >= 0 ? '▲' : '▼';
           const cls = d >= 0 ? 'color:#dc2626' : 'color:#16a34a';
-          trendHtml += `<div style="text-align:right; font-size:0.8rem; margin-top:0.5rem; ${cls}; font-weight:700;">ยอดสุทธิ ${arrow} ${Math.abs(d).toFixed(1)}% MoM</div>`;
+          trendHtml += `<div style="text-align:right; font-size:0.8rem; margin-top:0.5rem; ${cls}; font-weight:700;">ยาคืนเสีย ${arrow} ${Math.abs(d).toFixed(1)}% MoM</div>`;
         }
       }
       document.getElementById('trendRows').innerHTML = trendHtml;
 
-      // ---- Top 10 Reasons ----
       const reasonMap = {};
+      
+      function groupReturnReason(reason) {
+        if (!reason || reason.trim() === '-') return "ไม่ระบุเหตุผล";
+        let r = reason.replace(/\s+/g, '').toLowerCase();
+        
+        if (r.includes("ซ้ำ")) return "ออเดอร์ซ้ำ / สั่งยาซ้ำ";
+        if (r.includes("ผู้แทน") && (r.includes("ผิด") || r.includes("เกิน") || r.includes("ขนาด") || r.includes("จำนวน") || r.includes("ซ้ำ"))) return "ผู้แทนเปิดออเดอร์ผิด";
+        if ((r.includes("แอดมิน") || r.includes("admin")) && (r.includes("ผิด") || r.includes("ซ้ำ"))) return "แอดมินเปิดออเดอร์ผิด";
+        
+        if (r.includes("สั่งผิด") || r.includes("สั่งสินค้าผิด") || r.includes("สั่งยาผิด") || r.includes("เช็คสต็อกผิด") || r.includes("เช็ตสต็อกผิด") || r.includes("เช็คผิด") || r.includes("ผิดขนาด") || r.includes("ผิดจำนวน") || r.includes("โค้ดผิด")) return "ลูกค้าสั่งผิด / เช็คสต็อกผิด";
+        
+        if (r.includes("อายุสั้น") || r.includes("ระบายช้า") || r.includes("จ่ายยาไม่ทัน") || r.includes("เกณฑ์")) return "ยาอายุสั้น / ระบายช้า";
+        if (r.includes("ไม่รับ") || r.includes("ยกเลิก") || r.includes("ที่อื่น") || r.includes("คืนยา")) return "ลูกค้ายกเลิก / ไม่รับสินค้า";
+        if (r.includes("ชำรุด") || r.includes("บุบ") || r.includes("แตก") || r.includes("พัง") || r.includes("ขาด")) return "สินค้าชำรุด / กล่องบุบ";
+        if (r.includes("ราคา")) return "ปัญหาเรื่องราคา";
+        if (r.includes("สเปค") || r.includes("qc") || r.includes("เปลี่ยนกล่อง")) return "ปัญหาคุณภาพสินค้า (QC)";
+        if (r.includes("ส่งผิดสาขา")) return "ส่งผิดสาขา";
+        
+        let clean = reason.trim();
+        if (clean.startsWith("เนื่องจาก")) clean = clean.substring(9).trim();
+        return clean;
+      }
+      
       data.forEach(d => { 
         if (d.returnReason && d.returnReason !== '-') {
-          if(!reasonMap[d.returnReason]) reasonMap[d.returnReason] = {val:0, qaWh:0, qa:0};
-          reasonMap[d.returnReason].val += d.totalPrice;
-          if (passKeywords.some(k => (d.qaWh||'').toLowerCase().includes(k))) reasonMap[d.returnReason].qaWh += d.totalPrice;
-          if (passKeywords.some(k => (d.qaResult||'').toLowerCase().includes(k))) reasonMap[d.returnReason].qa += d.totalPrice;
+          const gReason = groupReturnReason(d.returnReason);
+          if(!reasonMap[gReason]) reasonMap[gReason] = {val:0, qaWh:0, qa:0};
+          reasonMap[gReason].val += d.totalPrice;
+          if (passKeywords.some(k => (d.qaWh||'').toLowerCase().includes(k))) reasonMap[gReason].qaWh += d.totalPrice;
+          if (passKeywords.some(k => (d.qaResult||'').toLowerCase().includes(k))) reasonMap[gReason].qa += d.totalPrice;
         }
       });
       const sortedReasons = Object.keys(reasonMap).map(k => ({
@@ -688,7 +655,7 @@
       })).sort((a,b) => b.net - a.net);
       const totalNetReasons = sortedReasons.reduce((s,r) => s+r.net, 0) || 1;
       document.getElementById('kpiTopReason').textContent = sortedReasons[0]?.name.slice(0,20) || '—';
-      document.getElementById('kpiTopReasonPct').textContent = sortedReasons[0] ? `${((sortedReasons[0].net/totalNetReasons)*100).toFixed(1)}% ของยอดสุทธิสาเหตุทั้งหมด` : '—';
+      document.getElementById('kpiTopReasonPct').textContent = sortedReasons[0] ? `${((sortedReasons[0].net/totalNetReasons)*100).toFixed(1)}% ของยาคืนเสีย` : '—';
       let rBody = '';
       sortedReasons.slice(0,10).forEach((r, i) => {
         const pct = ((r.net/totalNetReasons)*100).toFixed(1);
@@ -702,20 +669,14 @@
       });
       document.getElementById('reasonTableBody').innerHTML = rBody;
 
-      // ---- QA Result ----
       const qaMap = {};
       data.forEach(d => { if (d.qaResult && d.qaResult !== '-') qaMap[d.qaResult] = (qaMap[d.qaResult]||0)+d.totalPrice; });
       const totalQa = Object.values(qaMap).reduce((s,v) => s+v, 0) || 1;
       const sortedQa = Object.keys(qaMap).map(k => ({name:k, val:qaMap[k]})).sort((a,b) => b.val-a.val);
       const qaColors = ['#2563eb','#16a34a','#d97706','#dc2626','#7c3aed','#0891b2'];
-
       let passVal = 0;
-      sortedQa.forEach(q => {
-        const lower = q.name.toLowerCase();
-        if (passKeywords.some(k => lower.includes(k))) { passVal += q.val; }
-      });
+      sortedQa.forEach(q => { const lower = q.name.toLowerCase(); if (passKeywords.some(k => lower.includes(k))) passVal += q.val; });
       const passPct = (passVal/totalQa*100).toFixed(1);
-
       let qaHtml = '';
       sortedQa.slice(0,6).forEach((q, i) => {
         const pct = ((q.val/totalQa)*100).toFixed(1);
@@ -731,7 +692,6 @@
       });
       document.getElementById('qaRows').innerHTML = qaHtml;
 
-      // ---- Top 10 Customers ----
       const custMap = {};
       data.forEach(d => { 
         if (d.customerName && d.customerName !== '-') {
@@ -752,13 +712,12 @@
           <td class="${rankClass(i)}">${rankIcon(i)}</td>
           <td title="${c.name}">${c.name.length>30?c.name.slice(0,30)+'…':c.name}</td>
           <td style="text-align:right; color:var(--text-sub);">${fmt(c.val)}</td>
-          <td class="val-purple" style="text-align:right; color:#dc2626;">${fmt(c.net)}</td>
+          <td class="val-red" style="text-align:right; color:#dc2626;">${fmt(c.net)}</td>
           <td><span class="pct-badge">${pct}%</span></td>
         </tr>`;
       });
       document.getElementById('custTableBody').innerHTML = cBody || '<tr><td colspan="5" style="text-align:center;color:#94a3b8;padding:1rem;">ไม่มีข้อมูล</td></tr>';
 
-      // ---- Top 10 Sales Reps ----
       const repMap = {};
       data.forEach(d => { 
         if (d.salesRep && d.salesRep !== '-') {
